@@ -112,6 +112,8 @@ class EventosController extends Controller
                 'aprobado_por'           => 'MTRA. ANDREA MA. DEL ROCÍO MERLOS NÁJERA',
                 'responsable_evento'     => '',
                 'coordinacion_evento'    => '',
+                'maestra_ceremonias'     => '',
+                'num_spots'              => 5,
                 'invitados_especiales'   => '[]',
                 'modulos_jornada'        => '[]',
                 'requerimientos_internos'=> '[]',
@@ -128,6 +130,8 @@ class EventosController extends Controller
             $evento['requerimientos_externos'] = json_decode($evento['requerimientos_externos'] ?? '[]', true);
             $evento['coordinacion_evento']  = $evento['coordinacion_evento'] ?? '';
             $evento['objetivo_evento']      = $evento['objetivo'] ?? '';
+            $evento['maestra_ceremonias']   = $evento['maestra_ceremonias'] ?? '';
+            $evento['num_spots']            = $evento['num_spots'] ?? 5;
         }
 
         $invitadosList = $evento['invitados_especiales'] ?? [];
@@ -137,6 +141,18 @@ class EventosController extends Controller
 
         $ordenModel = $this->model('OrdenDelDia');
         $ordenes = $ordenModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
+
+        // Calcular duración para cada orden (hora_fin - hora_inicio)
+        foreach ($ordenes as &$o) {
+            if (!empty($o['hora_inicio']) && !empty($o['hora_fin'])) {
+                $horaInicio = strtotime($o['hora_inicio']);
+                $horaFin = strtotime($o['hora_fin']);
+                $o['duracion_calculada'] = round(($horaFin - $horaInicio) / 60);
+            } else {
+                $o['duracion_calculada'] = 15;
+            }
+        }
+        unset($o);
 
         $presidiumModel = $this->model('PresidiumAsistente');
         $presidium = $presidiumModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
@@ -212,7 +228,7 @@ class EventosController extends Controller
     }
 
     // ============================================================
-    // 3. GUARDAR CARPETA (CORREGIDO - SIN unidad_medida_id)
+    // 3. GUARDAR CARPETA
     // ============================================================
     public function guardar_carpeta()
     {
@@ -228,6 +244,7 @@ class EventosController extends Controller
         $data['invitados_especiales'] = $data['invitados'] ?? [];
         $data['modulos_jornada'] = $data['modulos'] ?? [];
 
+        // Tipo de presídium
         $tipoPresidiumNombre = $data['tipo_presidium_seleccionado'] ?? 'lineal';
         $tipoPresidiumModel = $this->model('TipoPresidium');
         $tipoPresidiumId = 1;
@@ -240,6 +257,7 @@ class EventosController extends Controller
         }
         $data['tipo_presidium'] = $tipoPresidiumId;
 
+        // Decodificar presidium_data
         $data['presidium'] = isset($data['presidium_data'])
             ? (json_decode($data['presidium_data'], true) ?: [])
             : [];
@@ -334,7 +352,7 @@ class EventosController extends Controller
             $carpetaId = $nuevoId;
         }
 
-        // Guardar/actualizar evento_detalle (sin duplicados)
+        // Guardar/actualizar evento_detalle
         if (!$eventoId && $carpetaId) {
             $existente = $eventoModel->obtenerPorCarpetaIdCompleto($carpetaId);
             if ($existente) {
@@ -360,6 +378,8 @@ class EventosController extends Controller
             'aprobado_por'           => $data['aprobado_por'] ?? 'MTRA. ANDREA MA. DEL ROCÍO MERLOS NÁJERA',
             'responsable_evento'     => $data['responsable_evento'] ?? '',
             'coordinacion_evento'    => $data['coordinacion_evento'] ?? '',
+            'maestra_ceremonias'     => $data['maestra_ceremonias'] ?? '',
+            'num_spots'              => (int)($data['num_spots'] ?? 5),
             'invitados_especiales'   => json_encode($data['invitados_especiales'] ?? []),
             'modulos_jornada'        => json_encode($data['modulos_jornada'] ?? []),
             'requerimientos_internos'=> json_encode($data['req_internos'] ?? []),
@@ -379,35 +399,42 @@ class EventosController extends Controller
             $eventoId = $eventoGuardado;
         }
 
-        // Guardar orden del día (sin unidad_medida_id)
+        // Guardar orden del día
         $ordenes = [];
         if (isset($data['orden']) && is_array($data['orden'])) {
             foreach ($data['orden'] as $o) {
                 if (isset($o['hora_inicio']) && isset($o['duracion'])) {
-                    $responsable = $o['responsable_id'] ?? null;
-                    if ($responsable === 'otro' || $responsable === '') {
-                        $responsable = null;
-                    }
                     $horaInicio = $o['hora_inicio'];
                     $duracion = (int)$o['duracion'];
                     $horaFin = date('H:i:s', strtotime("$horaInicio + $duracion minutes"));
 
+                    $responsableId = null;
+                    $otroResponsable = null;
+                    if (isset($o['responsable_id'])) {
+                        if ($o['responsable_id'] === 'otro' || $o['responsable_id'] === '') {
+                            $otroResponsable = $o['otro_responsable'] ?? '';
+                        } else {
+                            $responsableId = (int)$o['responsable_id'] ?: null;
+                        }
+                    }
+
                     $ordenes[] = [
-                        'hora_inicio'     => $horaInicio,
-                        'hora_fin'        => $horaFin,
-                        'actividad'       => $o['actividad'] ?? '',
-                        'responsable_id'  => $responsable
+                        'hora_inicio'      => $horaInicio,
+                        'hora_fin'         => $horaFin,
+                        'actividad'        => $o['actividad'] ?? '',
+                        'responsable_id'   => $responsableId,
+                        'otro_responsable' => $otroResponsable
                     ];
                 }
             }
         }
         $ordenModel->guardarMultiple($eventoId, $ordenes);
 
-        // Guardar presídium
+        // Guardar presídium (solo con nombre)
         $presidiumList = [];
         if (isset($data['presidium']) && is_array($data['presidium'])) {
             foreach ($data['presidium'] as $p) {
-                if (!empty($p['nombre'])) {
+                if ($p['orden'] !== '*' && !empty($p['nombre'])) {
                     $presidiumList[] = [
                         'tipo_presidium_id' => $tipoPresidiumId,
                         'nombre_invitado'   => $p['nombre'],
@@ -531,7 +558,6 @@ class EventosController extends Controller
         $carpeta = $carpetaModel->obtenerPorRegistroActividadId($registroId);
         $carpetaId = $carpeta['id'] ?? null;
 
-        // Fuera de tiempo y no justificado: solo guardar justificación
         if ($esFueraTiempo && ($estadoActual != 'justificado' && $estadoActual != 'entregado')) {
             if (empty($justificacion)) {
                 echo json_encode(['success' => false, 'error' => 'Debes escribir una justificación para la entrega fuera de tiempo']);
@@ -555,7 +581,6 @@ class EventosController extends Controller
             $resultadoGuardado = $carpetaModel->guardar($datosCarpeta);
             if ($resultadoGuardado) {
                 $carpetaId = $carpetaId ?: $resultadoGuardado;
-                
                 $historialModel = $this->model('HistorialCarpeta');
                 $historialModel->guardar([
                     'carpeta_id' => $carpetaId,
@@ -586,7 +611,6 @@ class EventosController extends Controller
             return;
         }
 
-        // Subida normal de archivo
         if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
             echo json_encode(['success' => false, 'error' => 'Debes seleccionar un archivo']);
             return;
@@ -628,7 +652,6 @@ class EventosController extends Controller
         $resultadoGuardado = $carpetaModel->guardar($datosCarpeta);
         if ($resultadoGuardado) {
             $carpetaId = $carpetaId ?: $resultadoGuardado;
-
             $historialModel = $this->model('HistorialCarpeta');
             $historialModel->guardar([
                 'carpeta_id' => $carpetaId,
@@ -637,7 +660,6 @@ class EventosController extends Controller
                 'estado_nuevo' => $nuevoEstado,
                 'comentario' => 'Archivo subido: ' . $nombreArchivo
             ]);
-
             echo json_encode(['success' => true]);
         } else {
             echo json_encode(['success' => false, 'error' => 'Error al guardar en la base de datos']);
@@ -700,7 +722,6 @@ class EventosController extends Controller
                 'estado_anterior' => $estadoAnterior,
                 'estado_nuevo' => 'aprobado'
             ]);
-
             header('Location: /Dir_bienestar/eventos/revision?mensaje=aprobado');
             exit;
         } else {
@@ -736,7 +757,6 @@ class EventosController extends Controller
                 'estado_anterior' => $estadoAnterior,
                 'estado_nuevo' => 'justificado'
             ]);
-
             header('Location: /Dir_bienestar/eventos/revision?mensaje=justificacion_validada');
             exit;
         } else {
@@ -832,7 +852,6 @@ class EventosController extends Controller
                 'estado_anterior' => $estadoAnterior,
                 'estado_nuevo' => 'fuera_tiempo'
             ]);
-
             header('Location: /Dir_bienestar/eventos/revision?mensaje=rechazado');
             exit;
         } else {

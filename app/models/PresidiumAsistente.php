@@ -26,7 +26,6 @@ class PresidiumAsistente extends Model
                 (evento_detalle_id, tipo_presidium_id, nombre_invitado, cargo_invitado) 
                 VALUES (?, ?, ?, ?)";
         $stmt = $this->db->query($sql);
-
         foreach ($presidium as $p) {
             $stmt->execute([
                 $eventoDetalleId,
@@ -35,7 +34,6 @@ class PresidiumAsistente extends Model
                 $p['cargo_invitado']
             ]);
         }
-
         return true;
     }
 }
