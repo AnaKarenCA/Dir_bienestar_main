@@ -1,0 +1,8 @@
+RewriteEngine On
+RewriteBase /Dir_bienestar/
+# Excluir carpetas de assets, uploads, etc.
+RewriteRule ^(uploads|css|js|img|fonts|favicon) - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^(.*)$ public/index.php?url=$1 [QSA,L]

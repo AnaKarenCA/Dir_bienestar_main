@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>DG Bienestar · Resumen Mensual de Actividades</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #FEF9F0;
+            font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+            padding: 28px 24px;
+            color: #2C241A;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Encabezado */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+            border-bottom: 2px solid #E6D8C8;
+            padding-bottom: 16px;
+        }
+        .logo-area img {
+            height: 70px;
+            width: auto;
+        }
+        .title-area h1 {
+            font-size: 1.8rem;
+            color: #800000;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+        .title-area p {
+            color: #7A5A3A;
+            font-weight: 500;
+        }
+
+        /* Panel de filtros simplificado */
+        .filters-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.04);
+            border: 1px solid #EFE4D6;
+        }
+        .filters-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+            align-items: flex-end;
+        }
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 150px;
+        }
+        .filter-item label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #800000;
+            letter-spacing: 0.4px;
+        }
+        .filter-item select, .filter-item input {
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid #DBCAB2;
+            background: #FFFDF9;
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+        }
+        .reset-button {
+            background: #E7DAC8;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #5E3E22;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .reset-button:hover {
+            background: #D4C3AB;
+        }
+
+        /* Tarjeta de resumen */
+        .summary-card {
+            background: white;
+            border-radius: 32px;
+            padding: 20px;
+            box-shadow: 0 12px 24px -10px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+        .summary-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #800000;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 600px;
+        }
+        .summary-table th {
+            background: #800000;
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .summary-table td {
+            border-bottom: 1px solid #EDE0D2;
+            padding: 10px 8px;
+            text-align: center;
+        }
+        .summary-table tr:hover {
+            background: #FCF5EA;
+        }
+        .avance-bar {
+            background: #E9DDCF;
+            border-radius: 20px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .avance-fill {
+            background: #B9975B;
+            height: 8px;
+            width: 0%;
+            border-radius: 20px;
+        }
+        .avance-text {
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 0.7rem;
+            color: #B28B60;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo-area">
+            <img src="logo_d_bienestar.png" alt="DG Bienestar" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%2070%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23800000%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%3EDGB%3C%2Ftext%3E%3C%2Fsvg%3E';">
+        </div>
+        <div class="title-area">
+            <h1>DIRECCIÓN GENERAL DE BIENESTAR</h1>
+            <p>Resumen Mensual de Actividades · Seguimiento de metas</p>
+        </div>
+    </div>
+
+    <!-- Filtros: año, mes, unidad administrativa, actividad, avance -->
+    <div class="filters-card">
+        <div class="filters-grid">
+            <div class="filter-item">
+                <label>Año</label>
+                <select id="filterYear">
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label>Mes</label>
+                <select id="filterMes">
+                    <option value="1">Enero</option><option value="2">Febrero</option>
+                    <option value="3">Marzo</option><option value="4">Abril</option>
+                    <option value="5">Mayo</option><option value="6" selected>Junio</option>
+                    <option value="7">Julio</option><option value="8">Agosto</option>
+                    <option value="9">Septiembre</option><option value="10">Octubre</option>
+                    <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label>Unidad Administrativa</label>
+                <select id="filterUA"><option value="">Todas</option></select>
+            </div>
+            <div class="filter-item">
+                <label>Actividad</label>
+                <select id="filterActividad"><option value="">Todas</option></select>
+            </div>
+            <div class="filter-item">
+                <label>Avance (%)</label>
+                <select id="filterAvance">
+                    <option value="all">Todos</option>
+                    <option value="0">0%</option>
+                    <option value="1-25">1% - 25%</option>
+                    <option value="26-50">26% - 50%</option>
+                    <option value="51-75">51% - 75%</option>
+                    <option value="76-99">76% - 99%</option>
+                    <option value="100">100%</option>
+                </select>
+            </div>
+            <button class="reset-button" id="resetFiltersBtn">Limpiar filtros</button>
+        </div>
+    </div>
+
+    <!-- Tabla de resumen mensual -->
+    <div class="summary-card">
+        <div class="summary-title">
+            <span>📊 Resumen Mensual</span>
+            <span style="font-size:0.8rem; font-weight:normal;" id="mesActualLabel">Junio 2026</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="summary-table" id="summaryTable">
+                <thead>
+                    <tr><th>Actividad</th><th>Meta</th><th>Registrado</th><th>Diferencia</th><th>Avance</th></tr>
+                </thead>
+                <tbody id="summaryBody"><tr><td colspan="5">Cargando datos...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <footer>Los filtros aplican sobre el año y mes seleccionados. El avance se calcula con base en la meta por tipo de actividad.</footer>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // LISTAS DESPLEGABLES
+    const uaList = ["CAT","UDS","DA","UAP","UAP_DGV","UAP_DIC","DPSAI","DPSAI_DPS","DPSAI_DMV","DPSAI_DAI","DAJRCS","DAJRCS_DVIJ","DAJRCS_DRCS","DCSIND","DCSIND_DPSC","DCSIND_DAGSV","DGB"];
+    // Tipos de actividad con metas
+    const actividadesMeta = [
+        { nombre: "1_01_ASESORÍA", meta: 15 },
+        { nombre: "1_02_TRANSMISIÓN", meta: 2 },
+        { nombre: "1_03_CONFERENCIA", meta: 0 },
+        { nombre: "1_04_EVENTO", meta: 0 },
+        { nombre: "1_05_TALLER", meta: 4 },
+        { nombre: "1_06_PLÁTICA", meta: 8 },
+        { nombre: "1_07_CÁPSULA", meta: 4 },
+        { nombre: "1_08_CONVOCATORIA", meta: 0 },
+        { nombre: "1_09_FERIA", meta: 0 },
+        { nombre: "1_10_CONCURSO", meta: 0 },
+        { nombre: "1_11_CAMPAÑA", meta: 1 },
+        { nombre: "1_12_GESTIÓN", meta: 1 },
+        { nombre: "1_13_CAMPAÑA", meta: 1 },
+        { nombre: "1_14_JORNADA", meta: 0 },
+        { nombre: "1_15_SESIÓN", meta: 1 },
+        { nombre: "1_16_CAMPAÑA", meta: 1 }
+    ];
+
+    // --------------------------------------------------------------
+    // DATOS DE ACTIVIDADES (incluyendo varios años)
+    let todasLasActividades = [
+        // 2025
+        { id:101, fecha:"2025-06-10", responsable:"Lic. Ana López", ua:"DGB", actividad:"1_01_ASESORÍA", lugar:"Oficina", delegacion:"01 Centro Histórico", estado:"completado" },
+        { id:102, fecha:"2025-06-15", responsable:"Dr. Jorge Ruiz", ua:"UAP", actividad:"1_05_TALLER", lugar:"Centro de Bienestar", delegacion:"06 San Sebastian", estado:"pendiente" },
+        // 2026
+        { id:1, fecha:"2026-06-03", responsable:"Mtra. Laura Gómez", ua:"DGB", actividad:"1_05_TALLER", lugar:"Centro de Bienestar", delegacion:"06 San Sebastian", estado:"completado" },
+        { id:2, fecha:"2026-06-10", responsable:"Dr. Jorge Méndez", ua:"UAP", actividad:"1_04_EVENTO", lugar:"Oficina", delegacion:"18 Ciudad Universitaria", estado:"pendiente" },
+        { id:3, fecha:"2026-06-15", responsable:"Lic. Ana Ruiz", ua:"DPSAI", actividad:"1_06_PLÁTICA", lugar:"Parque", delegacion:"05 Independencia", estado:"completado" },
+        { id:4, fecha:"2026-06-20", responsable:"Mtro. Carlos Díaz", ua:"CAT", actividad:"1_03_CONFERENCIA", lugar:"Escuela", delegacion:"10 Metropolitana", estado:"destiempo" },
+        { id:5, fecha:"2026-06-28", responsable:"Lic. Patricia Soto", ua:"UDS", actividad:"1_11_CAMPAÑA", lugar:"Oficina", delegacion:"31 San Lorenzo Tepaltitlan", estado:"completado" },
+        { id:6, fecha:"2026-06-01", responsable:"Dr. Fernando Vega", ua:"DCSIND", actividad:"1_02_TRANSMISIÓN", lugar:"Oficina", delegacion:"01 Centro Histórico", estado:"pendiente" },
+        { id:7, fecha:"2026-06-07", responsable:"Mtra. Elena Castro", ua:"DPSAI_DPS", actividad:"1_07_CÁPSULA", lugar:"Centro de Bienestar", delegacion:"22 Cacalomacán", estado:"completado" },
+        { id:8, fecha:"2026-06-12", responsable:"Lic. Raúl Herrera", ua:"DA", actividad:"1_12_GESTIÓN", lugar:"Oficina", delegacion:"27 San Buenaventura", estado:"completado" },
+        { id:9, fecha:"2026-06-18", responsable:"Mtra. Silvia Núñez", ua:"UAP_DGV", actividad:"1_05_TALLER", lugar:"Espacio Deportivo", delegacion:"14 Seminario Conciliar", estado:"pendiente" },
+        { id:10, fecha:"2026-06-22", responsable:"Dr. Arturo Paz", ua:"DGB", actividad:"1_15_SESIÓN", lugar:"Parque", delegacion:"38 Santa Ana Tlapaltitlan", estado:"completado" },
+        { id:11, fecha:"2026-06-05", responsable:"Lic. Mariana Cruz", ua:"DAJRCS", actividad:"1_01_ASESORÍA", lugar:"Oficina", delegacion:"03 Arbol de las Manitas", estado:"completado" },
+        { id:12, fecha:"2026-06-25", responsable:"Mtro. Ricardo Paz", ua:"DCSIND_DPSC", actividad:"1_13_CAMPAÑA", lugar:"Centro de Bienestar", delegacion:"48 Sauces", estado:"destiempo" },
+        // 2027
+        { id:201, fecha:"2027-06-02", responsable:"Mtra. Carla Ríos", ua:"DGB", actividad:"1_06_PLÁTICA", lugar:"Parque", delegacion:"05 Independencia", estado:"completado" }
+    ];
+
+    // Poblar selects dinámicos (UA, Actividad)
+    function populateSelects() {
+        const uaSelect = document.getElementById('filterUA');
+        uaList.forEach(ua => { let opt = document.createElement('option'); opt.value = ua; opt.textContent = ua; uaSelect.appendChild(opt); });
+        const actSelect = document.getElementById('filterActividad');
+        actividadesMeta.forEach(act => { let opt = document.createElement('option'); opt.value = act.nombre; opt.textContent = act.nombre; actSelect.appendChild(opt); });
+    }
+
+    // Obtener actividades filtradas según año, mes, UA, actividad
+    function getFilteredActivities() {
+        const year = parseInt(document.getElementById('filterYear').value);
+        const month = parseInt(document.getElementById('filterMes').value);
+        let filtered = todasLasActividades.filter(act => {
+            const [y, m] = act.fecha.split('-').map(Number);
+            return y === year && m === month;
+        });
+        const ua = document.getElementById('filterUA').value;
+        if (ua) filtered = filtered.filter(a => a.ua === ua);
+        const act = document.getElementById('filterActividad').value;
+        if (act) filtered = filtered.filter(a => a.actividad === act);
+        return filtered;
+    }
+
+    // Calcular datos de resumen (por tipo de actividad)
+    function computeSummaryData(filteredActs) {
+        const registradoMap = new Map();
+        filteredActs.forEach(act => {
+            const tipo = act.actividad;
+            registradoMap.set(tipo, (registradoMap.get(tipo) || 0) + 1);
+        });
+        return actividadesMeta.map(item => {
+            const registrado = registradoMap.get(item.nombre) || 0;
+            const meta = item.meta;
+            const diferencia = meta - registrado;
+            let avance = 0;
+            if (meta > 0) avance = Math.min(100, Math.round((registrado / meta) * 100));
+            return {
+                nombre: item.nombre,
+                meta: meta,
+                registrado: registrado,
+                diferencia: diferencia,
+                avance: avance
+            };
+        });
+    }
+
+    // Filtrar por rango de avance
+    function filterByAvance(summaryData, avanceRange) {
+        if (avanceRange === 'all') return summaryData;
+        if (avanceRange === '0') return summaryData.filter(d => d.avance === 0);
+        if (avanceRange === '100') return summaryData.filter(d => d.avance === 100);
+        if (avanceRange === '1-25') return summaryData.filter(d => d.avance >= 1 && d.avance <= 25);
+        if (avanceRange === '26-50') return summaryData.filter(d => d.avance >= 26 && d.avance <= 50);
+        if (avanceRange === '51-75') return summaryData.filter(d => d.avance >= 51 && d.avance <= 75);
+        if (avanceRange === '76-99') return summaryData.filter(d => d.avance >= 76 && d.avance <= 99);
+        return summaryData;
+    }
+
+    // Renderizar tabla
+    function renderSummary() {
+        const filteredActs = getFilteredActivities();
+        const summaryData = computeSummaryData(filteredActs);
+        const avanceRange = document.getElementById('filterAvance').value;
+        const filteredSummary = filterByAvance(summaryData, avanceRange);
+
+        let html = '';
+        for (let item of filteredSummary) {
+            const avanceColor = item.avance >= 100 ? '#2B7A4B' : (item.avance > 0 ? '#B9975B' : '#D98C2B');
+            html += `
+                <tr>
+                    <td style="text-align:left; font-weight:500;">${item.nombre}</td>
+                    <td>${item.meta}</td>
+                    <td>${item.registrado}</td>
+                    <td style="color:${item.diferencia<0?'#B3422E':'#2B7A4B'};">${item.diferencia}</td>
+                    <td style="min-width:120px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <div class="avance-bar"><div class="avance-fill" style="width:${item.avance}%; background:${avanceColor};"></div></div>
+                            <span class="avance-text">${item.avance}%</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        if (filteredSummary.length === 0) {
+            html = '<tr><td colspan="5" style="text-align:center;">No hay datos con los filtros seleccionados</td></tr>';
+        }
+        document.getElementById('summaryBody').innerHTML = html;
+
+        // Actualizar etiqueta del mes y año
+        const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        const mesIdx = parseInt(document.getElementById('filterMes').value) - 1;
+        const yearSel = document.getElementById('filterYear').value;
+        document.getElementById('mesActualLabel').innerHTML = `${meses[mesIdx]} ${yearSel}`;
+    }
+
+    // Limpiar filtros (excepto año y mes, se mantienen valores por defecto)
+    function resetFilters() {
+        document.getElementById('filterUA').value = '';
+        document.getElementById('filterActividad').value = '';
+        document.getElementById('filterAvance').value = 'all';
+        renderSummary();
+    }
+
+    // Eventos: cualquier cambio en los filtros actualiza la tabla
+    function bindEvents() {
+        const selectors = ['filterYear', 'filterMes', 'filterUA', 'filterActividad', 'filterAvance'];
+        selectors.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', () => renderSummary());
+        });
+        document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+    }
+
+    // Inicialización
+    function init() {
+        populateSelects();
+        bindEvents();
+        renderSummary();
+    }
+
+    init();
+</script>
+</body>
+</html>

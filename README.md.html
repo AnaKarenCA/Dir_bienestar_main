@@ -1,0 +1,308 @@
+# Sistema de Gestión de Campo para la Coordinación de Apoyo Técnico de la Dirección General de Bienestar
+
+Este proyecto es una plataforma web desarrollada bajo el patrón de arquitectura **MVC (Modelo-Vista-Controlador)** en PHP, diseñada para el seguimiento, control de metas y administración de actividades de campo e institucionales.
+
+---
+
+## 🛠️ Tecnologías y Entorno
+
+* **Backend:** PHP (Arquitectura MVC personalizada)
+* **Base de Datos:** MySQL (Primera Versión)
+* **Editor/IDE:** Visual Studio Code o Visual Studio
+* **Servidor de Desarrollo:** Motor integrado de PHP
+
+---
+
+## 📁 Estructura del Proyecto
+
+La arquitectura inicial del directorio está organizada de la siguiente manera para mantener una clara separación de responsabilidades:
+
+```text
+Dir_bienestar/
+├── .htaccess
+├── app/
+│   ├── bootstrap.php
+│   ├── config/
+│   │   └── database.php
+│   ├── controllers/
+│   │   ├── ActividadController.php
+│   │   ├── AuthController.php
+│   │   └── ...
+│   ├── core/
+│   │   ├── App.php
+│   │   ├── Controller.php
+│   │   ├── Database.php
+│   │   └── Model.php
+│   ├── models/
+│   │   ├── Usuario.php
+│   │   ├── RegistroActividad.php
+│   │   └── ...
+│   └── views/
+│       ├── auth/
+│       │   └── login.php
+│       └── ...
+└── public/
+    ├── index.php
+    ├── router.php (opcional)
+    ├── css/
+    ├── img/
+    └── js/
+
+---
+
+##Base de Datos (MySQL)
+CREATE DATABASE IF NOT EXISTS SistemaActividades;
+USE SistemaActividades;
+
+-- ==========================================
+-- 1. CATÁLOGOS BASE
+-- ==========================================
+
+CREATE TABLE Delegacion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Subdelegacion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    delegacion_id INT NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    FOREIGN KEY (delegacion_id) REFERENCES Delegacion(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Codigo_Postal (
+    cp VARCHAR(10) PRIMARY KEY,
+    subdelegacion_id INT NOT NULL,
+    FOREIGN KEY (subdelegacion_id) REFERENCES Subdelegacion(id)
+);
+
+CREATE TABLE Domicilio (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    calle VARCHAR(255) NOT NULL,
+    numero_exterior VARCHAR(20) NOT NULL,
+    numero_interior VARCHAR(20),
+    cp VARCHAR(10) NOT NULL,
+    FOREIGN KEY (cp) REFERENCES Codigo_Postal(cp)
+);
+
+CREATE TABLE Rol (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tipo_rol VARCHAR(50) NOT NULL
+);
+
+-- ==========================================
+-- 2. ESTRUCTURA ORGANIZACIONAL Y USUARIOS
+-- ==========================================
+
+CREATE TABLE Unidad_administrativa (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    codigo VARCHAR(20) NOT NULL UNIQUE,
+    descripcion TEXT,
+    objetivo TEXT
+);
+
+CREATE TABLE Usuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    clave VARCHAR(255) NOT NULL,
+    correo VARCHAR(100) NOT NULL UNIQUE,
+    puesto VARCHAR(100),
+    rol_id INT NOT NULL,
+    unidad_administrativa_id INT NOT NULL,
+    FOREIGN KEY (rol_id) REFERENCES Rol(id),
+    FOREIGN KEY (unidad_administrativa_id) REFERENCES Unidad_administrativa(id)
+);
+
+CREATE TABLE Unidad_Jefe (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    unidad_administrativa_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    fecha_inicio DATE NOT NULL DEFAULT (CURRENT_DATE),
+    fecha_fin DATE,
+    FOREIGN KEY (unidad_administrativa_id) REFERENCES Unidad_administrativa(id),
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
+    CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio)
+);
+
+-- ==========================================
+-- 3. ACTIVIDADES Y METAS
+-- ==========================================
+
+CREATE TABLE Unidad_de_medida (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Unidad_Actividad (
+    unidad_administrativa_id INT NOT NULL,
+    unidad_medida_id INT NOT NULL,
+    PRIMARY KEY (unidad_administrativa_id, unidad_medida_id),
+    FOREIGN KEY (unidad_administrativa_id) REFERENCES Unidad_administrativa(id),
+    FOREIGN KEY (unidad_medida_id) REFERENCES Unidad_de_medida(id)
+);
+
+CREATE TABLE Lugar (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Tipo_entregable (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_entregable VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Meta_Actividad_Periodo (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    unidad_administrativa_id INT NOT NULL,
+    unidad_medida_id INT NOT NULL,
+    anio INT NOT NULL,
+    periodo_tipo VARCHAR(20) NOT NULL,
+    periodo_valor INT NOT NULL,
+    meta_cantidad INT NOT NULL,
+    FOREIGN KEY (unidad_administrativa_id) REFERENCES Unidad_administrativa(id),
+    FOREIGN KEY (unidad_medida_id) REFERENCES Unidad_de_medida(id),
+    CHECK (
+        (periodo_tipo = 'Mensual' AND periodo_valor BETWEEN 1 AND 12) OR
+        (periodo_tipo = 'Trimestral' AND periodo_valor BETWEEN 1 AND 4) OR
+        (periodo_tipo = 'Semestral' AND periodo_valor BETWEEN 1 AND 2) OR
+        (periodo_tipo = 'Anual' AND periodo_valor = 1)
+    )
+);
+
+CREATE TABLE Registro_actividad (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    unidad_administrativa_id INT NOT NULL,
+    fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    lugar_id INT NOT NULL,
+    domicilio_id INT NOT NULL,
+    unidad_medida_id INT NOT NULL,
+    beneficiarios_asistentes INT DEFAULT 0,
+    descripcion TEXT NOT NULL,
+    tipo_entregable_id INT NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
+    FOREIGN KEY (unidad_administrativa_id) REFERENCES Unidad_administrativa(id),
+    FOREIGN KEY (lugar_id) REFERENCES Lugar(id),
+    FOREIGN KEY (domicilio_id) REFERENCES Domicilio(id),
+    FOREIGN KEY (unidad_medida_id) REFERENCES Unidad_de_medida(id),
+    FOREIGN KEY (tipo_entregable_id) REFERENCES Tipo_entregable(id)
+);
+
+-- ==========================================
+-- 4. CARPETA Y EVENTOS
+-- ==========================================
+
+CREATE TABLE Carpeta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    registro_actividad_id INT UNIQUE,
+    logo_toluca VARCHAR(255),
+    direccion_entrega VARCHAR(255),
+    fecha_entrega DATE,
+    realizo_id INT NOT NULL,
+    autorizado_por_id INT NOT NULL,
+    firma TEXT,
+    FOREIGN KEY (registro_actividad_id) REFERENCES Registro_actividad(id),
+    FOREIGN KEY (realizo_id) REFERENCES Usuario(id),
+    FOREIGN KEY (autorizado_por_id) REFERENCES Usuario(id)
+);
+
+CREATE TABLE Evento_Detalle (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    carpeta_id INT UNIQUE,
+    nombre_evento VARCHAR(255) NOT NULL,
+    fecha_evento DATE NOT NULL,
+    objetivo TEXT,
+    justificacion TEXT,
+    vestimenta VARCHAR(150),
+    imagen_diseno VARCHAR(255),
+    descripcion_meta TEXT,
+    FOREIGN KEY (carpeta_id) REFERENCES Carpeta(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Evento_Fotos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    evento_detalle_id INT NOT NULL,
+    tipo_foto VARCHAR(50) NOT NULL,
+    ruta_foto VARCHAR(255) NOT NULL,
+    FOREIGN KEY (evento_detalle_id) REFERENCES Evento_Detalle(id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 5. PRESIDIUM
+-- ==========================================
+
+CREATE TABLE Tipo_Presidium (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_tipo VARCHAR(100) NOT NULL,
+    imagen_editable VARCHAR(255)
+);
+
+CREATE TABLE Presidium_Asistente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    evento_detalle_id INT NOT NULL,
+    tipo_presidium_id INT NOT NULL,
+    nombre_invitado VARCHAR(150) NOT NULL,
+    cargo_invitado VARCHAR(150) NOT NULL,
+    FOREIGN KEY (evento_detalle_id) REFERENCES Evento_Detalle(id) ON DELETE CASCADE,
+    FOREIGN KEY (tipo_presidium_id) REFERENCES Tipo_Presidium(id)
+);
+
+-- ==========================================
+-- 6. ORDEN DEL DÍA
+-- ==========================================
+
+CREATE TABLE Orden_del_dia (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    evento_detalle_id INT NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    unidad_medida_id INT NOT NULL,
+    responsable_id INT,
+    FOREIGN KEY (evento_detalle_id) REFERENCES Evento_Detalle(id) ON DELETE CASCADE,
+    FOREIGN KEY (unidad_medida_id) REFERENCES Unidad_de_medida(id),
+    FOREIGN KEY (responsable_id) REFERENCES Usuario(id)
+);
+
+CREATE TABLE Orden_Invitado (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    orden_del_dia_id INT NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    cargo VARCHAR(150),
+    FOREIGN KEY (orden_del_dia_id) REFERENCES Orden_del_dia(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Orden_Modulo (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    orden_del_dia_id INT NOT NULL,
+    nombre_institucion VARCHAR(150) NOT NULL,
+    servicio VARCHAR(255) NOT NULL,
+    FOREIGN KEY (orden_del_dia_id) REFERENCES Orden_del_dia(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Orden_Requerimiento (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    orden_del_dia_id INT NOT NULL,
+    tipo_requerimiento VARCHAR(20) NOT NULL,
+    nombre_insumo VARCHAR(150) NOT NULL,
+    cantidad INT NOT NULL DEFAULT 1,
+    medida VARCHAR(50),
+    unidad VARCHAR(50),
+    FOREIGN KEY (orden_del_dia_id) REFERENCES Orden_del_dia(id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 7. ÍNDICES
+-- ==========================================
+
+CREATE INDEX IX_Registro_fecha ON Registro_actividad(fecha);
+CREATE INDEX IX_Registro_unidad ON Registro_actividad(unidad_administrativa_id);
+CREATE INDEX IX_Registro_unidad_medida ON Registro_actividad(unidad_medida_id);
+
+CREATE INDEX IX_MAP_periodo 
+ON Meta_Actividad_Periodo(unidad_administrativa_id, unidad_medida_id, anio, periodo_tipo);
+
+CREATE INDEX IX_UnidadJefe 
+ON Unidad_Jefe(unidad_administrativa_id, fecha_inicio, fecha_fin);

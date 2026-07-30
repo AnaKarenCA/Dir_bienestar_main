@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>DG Bienestar · Calendario de Actividades</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+        }
+
+        body {
+            background: #FEF7F0;
+            padding: 24px 28px;
+            color: #2C241A;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header con logo y título */
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+            border-bottom: 2px solid #E6D8C8;
+            padding-bottom: 16px;
+        }
+        .logo-area img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
+        .title-area h1 {
+            font-size: 1.8rem;
+            color: #800000;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+        .title-area p {
+            color: #7A5A3A;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        /* Filtros */
+        .filters-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.04);
+            border: 1px solid #EFE4D6;
+        }
+        .filters-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            align-items: flex-end;
+        }
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 150px;
+        }
+        .filter-item label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #800000;
+            letter-spacing: 0.4px;
+        }
+        .filter-item input, .filter-item select {
+            padding: 8px 14px;
+            border-radius: 40px;
+            border: 1px solid #DBCAB2;
+            background: #FFFDF9;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .reset-button {
+            background: #E7DAC8;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #5E3E22;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .reset-button:hover {
+            background: #D4C3AB;
+        }
+
+        /* Layout dos columnas */
+        .two-columns {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+        .calendar-col {
+            flex: 0 0 360px;
+            background: white;
+            border-radius: 36px;
+            padding: 20px 16px;
+            box-shadow: 0 12px 24px -10px rgba(0,0,0,0.08);
+            align-self: start;
+        }
+        .right-col {
+            flex: 1;
+            background: white;
+            border-radius: 36px;
+            padding: 20px;
+            box-shadow: 0 12px 24px -10px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        /* Navegación calendario */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .month-year-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #F7EFE4;
+            padding: 6px 12px;
+            border-radius: 60px;
+        }
+        .month-year-selector select, .month-year-selector input {
+            background: white;
+            border: 1px solid #DBCAB2;
+            border-radius: 40px;
+            padding: 6px 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: #E7DAC8;
+            border: none;
+            border-radius: 40px;
+            padding: 6px 14px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .month-year-label {
+            font-weight: 700;
+            font-size: 1rem;
+            background: #F7EFE4;
+            padding: 6px 16px;
+            border-radius: 40px;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #800000;
+            margin: 10px 0 6px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            gap: 6px;
+        }
+        .cal-day {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.85rem;
+            border-radius: 28px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.05s linear;
+        }
+        /* Colores según reglas */
+        .cal-day.other-month {
+            background-color: #450920 !important;
+            color: #d3d3d3 !important;
+        }
+        .cal-day.current-month {
+            background-color: #780000 !important;
+            color: white !important;
+        }
+        .cal-day.has-activity {
+            background-color: #d4a373 !important;
+            color: black !important;
+            font-weight: 700;
+        }
+        .cal-day:hover {
+            filter: brightness(0.92);
+            transform: scale(0.98);
+        }
+
+        .resumen-box {
+            margin-top: 20px;
+            background: #FCF5EA;
+            border-radius: 24px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+        }
+        .resumen-stat .num {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #800000;
+        }
+        .resumen-stat .label {
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Tabla estilos */
+        .data-table-wrapper {
+            overflow-x: auto;
+            max-height: 70vh;
+            border-radius: 20px;
+        }
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+            min-width: 1000px;
+        }
+        .activity-table th {
+            background: #800000;
+            color: white;
+            padding: 12px 8px;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            text-align: left;
+        }
+        .activity-table td {
+            border-bottom: 1px solid #EADBCB;
+            padding: 8px 6px;
+            vertical-align: top;
+            background-color: white;
+        }
+        .activity-table tr:hover td {
+            background-color: #FFF4E6;
+        }
+        .empty-placeholder {
+            text-align: center;
+            padding: 48px;
+            color: #AB8E66;
+            font-size: 0.9rem;
+        }
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 0.7rem;
+            color: #B28B60;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header-row">
+        <div class="logo-area">
+            <img src="logo_d_bienestar.png" alt="DG Bienestar" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%2070%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23800000%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%3EDGB%3C%2Ftext%3E%3C%2Fsvg%3E';">
+        </div>
+        <div class="title-area">
+            <h1>DIRECCIÓN GENERAL DE BIENESTAR</h1>
+            <p>Calendario de Actividades · Planeación y seguimiento</p>
+        </div>
+    </div>
+
+    <div class="filters-card">
+        <div class="filters-grid">
+            <div class="filter-item"><label>Responsable</label><input type="text" id="filtroResp" placeholder="Nombre"></div>
+            <div class="filter-item"><label>Unidad Adm.</label><select id="filtroUA"><option value="">Todas</option></select></div>
+            <div class="filter-item"><label>Lugar</label><select id="filtroLugar"><option value="">Todos</option></select></div>
+            <div class="filter-item"><label>Delegación</label><select id="filtroDel"><option value="">Todas</option></select></div>
+            <div class="filter-item"><label>Actividad</label><select id="filtroAct"><option value="">Todas</option></select></div>
+            <div class="filter-item"><label>Domicilio</label><input type="text" id="filtroDom"></div>
+            <button class="reset-button" id="resetFilters">Limpiar filtros</button>
+        </div>
+    </div>
+
+    <div class="two-columns">
+        <div class="calendar-col">
+            <div class="calendar-nav">
+                <div class="nav-buttons">
+                    <button class="nav-btn" id="prevMonthBtn">◀</button>
+                    <button class="nav-btn" id="nextMonthBtn">▶</button>
+                </div>
+                <div class="month-year-selector">
+                    <select id="monthSelect"></select>
+                    <input type="number" id="yearInput" min="2024" max="2030" step="1" value="2026">
+                </div>
+                <div class="month-year-label" id="monthYearLabel"></div>
+            </div>
+            <div class="weekdays" id="weekdaysRow"></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+            <div class="resumen-box" id="resumenMensual"></div>
+            <div style="font-size:0.65rem; margin-top:12px; text-align:center;">Haz clic en un día para filtrar rápidamente la tabla</div>
+        </div>
+
+        <div class="right-col">
+            <h3 style="color:#800000; margin-bottom: 12px; font-size: 1.2rem;"> Registro detallado de actividades</h3>
+            <div id="dynamicContent" class="data-table-wrapper"></div>
+        </div>
+    </div>
+    <footer>Los días con fondo beige (#d4a373) tienen eventos. Usa los filtros para refinar la búsqueda.</footer>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 1. MAPEO COMPLETO DE UNIDADES ADMINISTRATIVAS (sigla → nombre completo)
+    // --------------------------------------------------------------
+    const unidadMapping = {
+        "DGB": "Dirección General de Bienestar",
+        "CAT": "Coordinación de Apoyo Técnico",
+        "DA": "Delegación Administrativa",
+        "UDS": "Unidad de Diagnóstico Social",
+        "UAP": "Unidad de Ambiente de Paz",
+        "UAP-DGV": "Departamento de Gestión y Vinculación",
+        "UAP-DIC": "Departamento de Integración Ciudadana",
+        "DPSAI": "Dirección de Programas Sociales y Asuntos Indígenas",
+        "DPSAI-DMV": "Departamento de Mejoramiento a la Vivienda",
+        "DPSAI-DAI": "Departamento de Asuntos Indígenas",
+        "DPSAI-DPS": "Departamento de Programas Sociales",
+        "DCSIND": "Dirección de Convivencia Social, Inclusión y No Discriminación",
+        "DCSIND-DPSC": "Departamento de Prevención Social y Comunitaria",
+        "DCSIND-DAGSV": "Departamento de Atención a Grupos en Situación de Vulnerabilidad",
+        "DAJRCS": "Dirección de Apoyo a la Juventud, Recreación y Convivencia Social",
+        "DAJRCS-DVIJ": "Departamento de Vinculación e Impulso Juvenil",
+        "DAJRCS-DRCS": "Departamento de Recreación y Convivencia Social"
+    };
+
+    function getUnidadNombre(sigla) {
+        return unidadMapping[sigla] || sigla;
+    }
+
+    // --------------------------------------------------------------
+    // 2. DATOS REALES (ABRIL Y MAYO 2026) extraídos de la imagen + datos mayo
+    // --------------------------------------------------------------
+    const actividadesRaw = [
+        // ABRIL 2026
+        { fecha:"2026-04-21", hora:"10:00", responsable:"Mtro. Alejandro Estrada", ua_sigla:"DPSAI-DPS", actividad:"3_04_MANTENIMIENTO", cantidad:1, descripcion:"Limpieza y pintura", lugar:"Centro de Bienestar", delegacion:"23 Calixtlahuaca", subdelegacion:"Sin dato", domicilio:"Av. Tierra y Libertad s/n, 50260, Calixtlahuaca" },
+        { fecha:"2026-04-21", hora:"11:30", responsable:"Mtro. Alejandro Estrada", ua_sigla:"DPSAI-DPS", actividad:"3_04_MANTENIMIENTO", cantidad:1, descripcion:"Limpieza y pintura", lugar:"Centro de Bienestar", delegacion:"19 Nueva Oxtotitlán", subdelegacion:"Sin dato", domicilio:"Calle Lago Chapala s/n, 50260, Nueva Oxtotitlán" },
+        { fecha:"2026-04-21", hora:"12:00", responsable:"Mtro. Alejandro Estrada", ua_sigla:"DPSAI-DPS", actividad:"3_04_MANTENIMIENTO", cantidad:1, descripcion:"Limpieza y pintura", lugar:"Centro de Bienestar", delegacion:"23 Calixtlahuaca", subdelegacion:"Sin dato", domicilio:"Av. Tierra y Libertad s/n, 50260, Calixtlahuaca" },
+        { fecha:"2026-04-21", hora:"14:00", responsable:"Mtro. Alejandro Estrada", ua_sigla:"DPSAI-DPS", actividad:"3_04_MANTENIMIENTO", cantidad:1, descripcion:"Limpieza y pintura", lugar:"Centro de Bienestar", delegacion:"23 Calixtlahuaca", subdelegacion:"Sin dato", domicilio:"Av. Tierra y Libertad s/n, 50260, Calixtlahuaca" },
+        { fecha:"2026-04-24", hora:"10:00", responsable:"Mtro. Omar Ruiz", ua_sigla:"DGB", actividad:"0_00_OTRO", cantidad:1, descripcion:"Yo Pongo Guapa Toluca", lugar:"Oficina", delegacion:"11 Colón", subdelegacion:"Sin dato", domicilio:"Av Miguel Hidalgo y Costilla s/n, 50100, Toluca" },
+        { fecha:"2026-04-24", hora:"18:00", responsable:"Arturo Moreno", ua_sigla:"DPSAI-DPS", actividad:"4_06_EVENTO", cantidad:1, descripcion:"jcisbcibciascas", lugar:"Oficina", delegacion:"16 Seminario Las Torres", subdelegacion:"Sin dato", domicilio:"Calle San Juanito 4583, Milagro" },
+        { fecha:"2026-04-28", hora:"10:00", responsable:"Mtro. Omar Ruiz", ua_sigla:"DGB", actividad:"0_00_OTRO", cantidad:1, descripcion:"Yo Pongo Guapa Toluca", lugar:"Camino vecinal", delegacion:"03 Árbol de las Manitas", subdelegacion:"Sin dato", domicilio:"Calle Santiago Morales 244, 50329, Niños Heróes" },
+        { fecha:"2026-04-29", hora:"10:00", responsable:"Mtro. Omar Ruiz", ua_sigla:"DGB", actividad:"0_00_OTRO", cantidad:1, descripcion:"Yo Pongo Guapa Toluca", lugar:"Centro de Bienestar", delegacion:"08 Santa María de las Rosas", subdelegacion:"Sin dato", domicilio:"Av San Miguel Atotonilco 274, 50100, Santa María de las Rosas" },
+        { fecha:"2026-04-29", hora:"16:00", responsable:"Mtro. Alejandro Estrada", ua_sigla:"DPSAI-DPS", actividad:"2_02_SUPERVISIÓN", cantidad:1, descripcion:"dahaishciascc", lugar:"Centro de Bienestar", delegacion:"08 Santa María de las Rosas", subdelegacion:"Sin dato", domicilio:"calle daiufauga 47 qiwfy8yf" },
+        { fecha:"2026-04-30", hora:"22:00", responsable:"Mtra. Andréa María Del Rocío Merlos Najera", ua_sigla:"DCSIND-DAGSV", actividad:"1_06_CONFERENCIA", cantidad:2000, descripcion:"Plática de responsabilidades admin.", lugar:"Centro de Bienestar", delegacion:"32 San Marcos Yachihuacaltepec", subdelegacion:"Sin dato", domicilio:"Av Miguel Hidalgo s/n 50100, Portales" },
+        // MAYO 2026 (datos extra)
+        { fecha:"2026-05-09", hora:"10:00", responsable:"Arturo Moreno", ua_sigla:"DPSAI-DPS", actividad:"1_03_REUNIÓN", cantidad:1, descripcion:"Plática de alimentación", lugar:"Centro de Bienestar", delegacion:"08 Santa María de las Rosas", subdelegacion:"Sin dato", domicilio:"Calla Santiago De San Bartolo 45, San Miguel" },
+        { fecha:"2026-05-09", hora:"10:00", responsable:"Arturo Moreno", ua_sigla:"DPSAI-DPS", actividad:"2_01_PLÁTICA", cantidad:1, descripcion:"Plática de alimentación", lugar:"Centro de Bienestar", delegacion:"08 Santa María de las Rosas", subdelegacion:"Sin dato", domicilio:"Calla Santiago De San Bartolo 45, San Miguel" },
+        { fecha:"2026-05-10", hora:"09:00", responsable:"Julian Rivera", ua_sigla:"DGB", actividad:"0_00_OTRO", cantidad:1, descripcion:"Conferencia de Ética", lugar:"Oficina", delegacion:"01 Centro Histórico", subdelegacion:"Sin dato", domicilio:"Av Miguel Hidalgo s/n, 50100, Portales" },
+        { fecha:"2026-05-13", hora:"10:00", responsable:"Arturo Moreno", ua_sigla:"DPSAI-DPS", actividad:"2_01_PLÁTICA", cantidad:1, descripcion:"Plática de alimentación", lugar:"Centro de Bienestar", delegacion:"08 Santa María de las Rosas", subdelegacion:"Sin dato", domicilio:"Calla Santiago De San Bartolo 45, San Miguel" }
+    ];
+
+    // Expandir con datos adicionales faltantes de la imagen? ya están todos.
+    let actividades = actividadesRaw.map(act => ({
+        ...act,
+        ua_nombre: getUnidadNombre(act.ua_sigla)
+    }));
+
+    // --------------------------------------------------------------
+    // Estado global
+    let currentYear = 2026;
+    let currentMonth = 3;  // 0-index: 3 = abril (Abril)
+    let currentDateFilter = null;   // filtro extra por día click
+
+    // --------------------------------------------------------------
+    // Poblar selects dinámicos (UA, Lugar, Delegación, Actividad) basado en datos reales
+    // --------------------------------------------------------------
+    function populateDynamicFilters() {
+        const uaSet = new Set(); 
+        const lugarSet = new Set();
+        const delegSet = new Set();
+        const actSet = new Set();
+        actividades.forEach(a => {
+            uaSet.add(a.ua_nombre);
+            lugarSet.add(a.lugar);
+            delegSet.add(a.delegacion);
+            actSet.add(a.actividad);
+        });
+        const uaSelect = document.getElementById('filtroUA');
+        const lugarSelect = document.getElementById('filtroLugar');
+        const delSelect = document.getElementById('filtroDel');
+        const actSelect = document.getElementById('filtroAct');
+        
+        uaSelect.innerHTML = '<option value="">Todas</option>';
+        [...uaSet].sort().forEach(val => { let opt = document.createElement('option'); opt.value = val; opt.textContent = val; uaSelect.appendChild(opt); });
+        
+        lugarSelect.innerHTML = '<option value="">Todos</option>';
+        [...lugarSet].sort().forEach(val => { let opt = document.createElement('option'); opt.value = val; opt.textContent = val; lugarSelect.appendChild(opt); });
+        
+        delSelect.innerHTML = '<option value="">Todas</option>';
+        [...delegSet].sort().forEach(val => { let opt = document.createElement('option'); opt.value = val; opt.textContent = val; delSelect.appendChild(opt); });
+        
+        actSelect.innerHTML = '<option value="">Todas</option>';
+        [...actSet].sort().forEach(val => { let opt = document.createElement('option'); opt.value = val; opt.textContent = val; actSelect.appendChild(opt); });
+    }
+
+    // Obtener actividades filtradas (incluyendo filtro de fecha por clic)
+    function getFilteredActivities() {
+        let filtered = [...actividades];
+        const resp = document.getElementById('filtroResp').value.trim().toLowerCase();
+        if(resp) filtered = filtered.filter(a => a.responsable.toLowerCase().includes(resp));
+        const ua = document.getElementById('filtroUA').value;
+        if(ua) filtered = filtered.filter(a => a.ua_nombre === ua);
+        const lugar = document.getElementById('filtroLugar').value;
+        if(lugar) filtered = filtered.filter(a => a.lugar === lugar);
+        const deleg = document.getElementById('filtroDel').value;
+        if(deleg) filtered = filtered.filter(a => a.delegacion === deleg);
+        const act = document.getElementById('filtroAct').value;
+        if(act) filtered = filtered.filter(a => a.actividad === act);
+        const dom = document.getElementById('filtroDom').value.trim().toLowerCase();
+        if(dom) filtered = filtered.filter(a => a.domicilio.toLowerCase().includes(dom));
+        if(currentDateFilter) {
+            filtered = filtered.filter(a => a.fecha === currentDateFilter);
+        }
+        return filtered;
+    }
+
+    // Renderizado del calendario con las reglas de color
+    function renderCalendar() {
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        let startWeekday = firstDay.getDay(); // 0 domingo
+        let startOffset = startWeekday === 0 ? 6 : startWeekday - 1; // lunes=0
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const prevDays = new Date(currentYear, currentMonth, 0).getDate();
+        
+        const filteredActs = getFilteredActivities();
+        const eventDateSet = new Set(filteredActs.map(a => a.fecha));
+        
+        let gridHtml = '';
+        let dayCounter = 1;
+        let nextCounter = 1;
+        
+        for(let i = 0; i < 42; i++) {
+            let year = currentYear, month = currentMonth, dayNum, isCurrentMonth;
+            let dateStr;
+            if(i < startOffset) {
+                dayNum = prevDays - startOffset + i + 1;
+                month = currentMonth - 1;
+                isCurrentMonth = false;
+                if(month < 0) { month = 11; year = currentYear - 1; }
+            } else if(i >= startOffset + daysInMonth) {
+                dayNum = nextCounter++;
+                month = currentMonth + 1;
+                isCurrentMonth = false;
+                if(month > 11) { month = 0; year = currentYear + 1; }
+            } else {
+                dayNum = dayCounter++;
+                month = currentMonth;
+                isCurrentMonth = true;
+            }
+            const mm = String(month + 1).padStart(2,'0');
+            const dd = String(dayNum).padStart(2,'0');
+            dateStr = `${year}-${mm}-${dd}`;
+            let cls = isCurrentMonth ? 'current-month' : 'other-month';
+            if(eventDateSet.has(dateStr) && isCurrentMonth) cls = 'has-activity';
+            gridHtml += `<div class="cal-day ${cls}" data-fecha="${dateStr}">${dayNum}</div>`;
+        }
+        document.getElementById('calendarGrid').innerHTML = gridHtml;
+        const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        document.getElementById('monthYearLabel').innerHTML = `${monthNames[currentMonth]} ${currentYear}`;
+        
+        // Totales del mes actual (sin filtro de fecha extra para los resúmenes, pero basado en mes/año)
+        const eventosMes = actividades.filter(a => {
+            let [y,m] = a.fecha.split('-').map(Number);
+            return y === currentYear && m === currentMonth+1;
+        });
+        const diasOcup = new Set(eventosMes.map(e => e.fecha)).size;
+        const totalDiasMes = new Date(currentYear, currentMonth+1, 0).getDate();
+        document.getElementById('resumenMensual').innerHTML = `
+            <div class="resumen-stat"><div class="num">${eventosMes.length}</div><div class="label">Eventos</div></div>
+            <div class="resumen-stat"><div class="num">${diasOcup}</div><div class="label">Días ocupados</div></div>
+            <div class="resumen-stat"><div class="num">${totalDiasMes - diasOcup}</div><div class="label">Días libres</div></div>
+        `;
+        
+        // Evento click sobre día -> establecer filtro de fecha y refrescar tabla
+        document.querySelectorAll('.cal-day').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const fechaSeleccionada = el.getAttribute('data-fecha');
+                if(currentDateFilter === fechaSeleccionada) {
+                    currentDateFilter = null;
+                } else {
+                    currentDateFilter = fechaSeleccionada;
+                }
+                renderTable();
+                renderCalendar(); // para refrescar potencial resaltado, pero no cambia fondo por filtro
+                // mostrar indicador
+                const info = currentDateFilter ? `Filtrando actividades del día: ${currentDateFilter}` : 'Filtro de día eliminado';
+                const toast = document.createElement('div');
+                toast.textContent = info;
+                toast.style.position = 'fixed'; toast.style.bottom = '20px'; toast.style.left = '20px';
+                toast.style.backgroundColor = '#800000'; toast.style.color = 'white'; toast.style.padding = '6px 12px';
+                toast.style.borderRadius = '30px'; toast.style.fontSize = '0.7rem'; toast.style.zIndex = '999';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 1500);
+            });
+        });
+    }
+    
+    // Renderizar tabla con columnas completas
+    function renderTable() {
+        const data = getFilteredActivities();
+        const container = document.getElementById('dynamicContent');
+        if(!data.length) {
+            container.innerHTML = '<div class="empty-placeholder">📭 No hay actividades con los filtros seleccionados.</div>';
+            return;
+        }
+        let html = `<table class="activity-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th><th>Hora</th><th>Responsable</th><th>UA</th><th>Actividad</th>
+                    <th>Cantidad</th><th>Descripción</th><th>Lugar</th><th>Delegación</th><th>Subdelegación</th><th>Domicilio</th>
+                </tr>
+            </thead>
+            <tbody>`;
+        data.forEach(item => {
+            html += `<tr>
+                <td>${item.fecha}</td>
+                <td>${item.hora}</td>
+                <td>${item.responsable}</td>
+                <td>${item.ua_nombre}</td>
+                <td>${item.actividad}</td>
+                <td>${item.cantidad}</td>
+                <td>${item.descripcion.substring(0,60)}${item.descripcion.length>60?'…':''}</td>
+                <td>${item.lugar}</td>
+                <td>${item.delegacion}</td>
+                <td>${item.subdelegacion}</td>
+                <td style="max-width:220px;">${item.domicilio}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+    
+    // Navegación de mes/año
+    function changeMonth(delta) {
+        let newMonth = currentMonth + delta;
+        let newYear = currentYear;
+        if(newMonth < 0) { newMonth = 11; newYear--; }
+        if(newMonth > 11) { newMonth = 0; newYear++; }
+        currentMonth = newMonth;
+        currentYear = newYear;
+        document.getElementById('yearInput').value = currentYear;
+        document.getElementById('monthSelect').value = currentMonth;
+        currentDateFilter = null;
+        renderCalendar();
+        renderTable();
+    }
+    
+    function setYearMonth() {
+        currentYear = parseInt(document.getElementById('yearInput').value);
+        currentMonth = parseInt(document.getElementById('monthSelect').value);
+        if(isNaN(currentYear)) currentYear = 2026;
+        if(currentYear < 2024) currentYear = 2024;
+        if(currentYear > 2030) currentYear = 2030;
+        currentDateFilter = null;
+        renderCalendar();
+        renderTable();
+    }
+    
+    function initMonthSelect() {
+        const select = document.getElementById('monthSelect');
+        const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        for(let i=0; i<12; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = meses[i];
+            select.appendChild(option);
+        }
+        select.value = currentMonth;
+        select.addEventListener('change', setYearMonth);
+        document.getElementById('yearInput').addEventListener('change', setYearMonth);
+        document.getElementById('prevMonthBtn').addEventListener('click', () => changeMonth(-1));
+        document.getElementById('nextMonthBtn').addEventListener('click', () => changeMonth(1));
+    }
+    
+    // Reset completo de filtros (incluyendo filtro de fecha)
+    function resetFilters() {
+        document.getElementById('filtroResp').value = '';
+        document.getElementById('filtroUA').value = '';
+        document.getElementById('filtroLugar').value = '';
+        document.getElementById('filtroDel').value = '';
+        document.getElementById('filtroAct').value = '';
+        document.getElementById('filtroDom').value = '';
+        currentDateFilter = null;
+        renderTable();
+        renderCalendar(); 
+    }
+    
+    // Sincronizar cambios de filtros con tabla y calendario
+    function attachFilterEvents() {
+        const filterIds = ['filtroResp','filtroUA','filtroLugar','filtroDel','filtroAct','filtroDom'];
+        filterIds.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('input', () => { renderTable(); renderCalendar(); });
+                el.addEventListener('change', () => { renderTable(); renderCalendar(); });
+            }
+        });
+        document.getElementById('resetFilters').addEventListener('click', resetFilters);
+    }
+    
+    // Inicialización
+    function init() {
+        populateDynamicFilters();
+        initMonthSelect();
+        attachFilterEvents();
+        renderCalendar();
+        renderTable();
+    }
+    
+    // Ajustar semana de lunes a domingo en el UI
+    const weekdaysRow = document.getElementById('weekdaysRow');
+    if(weekdaysRow) weekdaysRow.innerHTML = ['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM'].map(d => `<div>${d}</div>`).join('');
+    
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Sistema de Registro de Actividades | Estado de México y Toluca</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-image: url('https://static.vecteezy.com/system/resources/previews/050/818/395/large_2x/abstract-crossed-golden-geometric-lines-on-white-background-free-vector.jpg');
+            background-repeat: repeat;
+            background-size: auto;
+            background-color: #fdf8ed;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Inter', sans-serif;
+        }
+
+        /* Contenedor principal: dos columnas, altura completa */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Columna izquierda: solo la imagen, sin márgenes ni fondo, altura total */
+        .logos-col {
+            width: 280px;
+            flex-shrink: 0;
+            background: none;      /* sin fondo */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: stretch;  /* para que la imagen se estire verticalmente */
+        }
+
+        .logos-col img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;     /* cubre todo el espacio sin distorsionar, recortando si es necesario */
+            display: block;
+        }
+
+        /* Columna derecha: formulario */
+        .form-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem 2rem 2rem 2rem;
+            overflow-y: auto;
+        }
+
+        /* Tarjeta del formulario */
+        .form-card {
+            background: #fffef7;
+            border-radius: 42px;
+            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem 2rem 2rem 2rem;
+            border: 1px solid rgba(169, 3, 3, 0.2);
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Título centrado, sin iconos */
+        .card-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .card-header h1 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #5a2a2a;
+            letter-spacing: -0.3px;
+        }
+
+        .card-header p {
+            font-size: 0.9rem;
+            color: #6f5b3e;
+            margin-top: 0.4rem;
+        }
+
+        /* Grid del formulario */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.2rem 1.8rem;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .field-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #a90303;
+            letter-spacing: 0.3px;
+        }
+
+        input, select, textarea {
+            padding: 0.7rem 1rem;
+            border: 1.5px solid #e2dac8;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            background-color: #ffffff;
+            transition: all 0.2s;
+            outline: none;
+            color: #2b2b28;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #a90303;
+            box-shadow: 0 0 0 3px rgba(169, 3, 3, 0.15);
+        }
+
+        select {
+            cursor: pointer;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23a90303" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            appearance: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[readonly] {
+            background-color: #faf5e9;
+            border-color: #ddcba4;
+            color: #5a4a32;
+            cursor: default;
+        }
+
+        /* Botones sin iconos */
+        .actions-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            border-top: 1px solid #eddabf;
+            padding-top: 1.8rem;
+        }
+
+        .btn {
+            border: none;
+            padding: 0.7rem 2rem;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #a90303;
+            color: white;
+            box-shadow: 0 4px 8px rgba(169, 3, 3, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #7f0202;
+            transform: scale(0.97);
+        }
+
+        .btn-secondary {
+            background: #f2ebda;
+            color: #a90303;
+            border: 1px solid #ddcba4;
+        }
+
+        .btn-secondary:hover {
+            background: #e7dcc4;
+        }
+
+        .warning-note {
+            background: #fff1e0;
+            border-left: 4px solid #a90303;
+            padding: 0.8rem 1rem;
+            border-radius: 24px;
+            font-size: 0.75rem;
+            color: #8f5100;
+            margin-top: 1.2rem;
+        }
+
+        /* Modal sin iconos */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.2s, opacity 0.2s;
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-container {
+            background: #fffef7;
+            border-radius: 44px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 40px rgba(0, 0, 0, 0.3);
+            border-top: 8px solid #a90303;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                transform: scale(0.96);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem 0.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ddcba4;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #a90303;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #a76c6c;
+            transition: 0.1s;
+        }
+
+        .close-modal:hover {
+            color: #a90303;
+        }
+
+        .modal-body {
+            padding: 1.8rem 2rem;
+        }
+
+        .data-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 0.8rem;
+            border-bottom: 1px dashed #e7ddcd;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .summary-label {
+            font-weight: 800;
+            color: #a90303;
+        }
+
+        .summary-value {
+            color: #2e2b26;
+            word-break: break-word;
+        }
+
+        .modal-footer {
+            padding: 1rem 2rem 2rem 2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            background: #fbf7ef;
+            border-radius: 0 0 44px 44px;
+        }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #a90303e6;
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 60px;
+            font-weight: 500;
+            z-index: 2100;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            font-size: 0.85rem;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            margin-top: 1.5rem;
+            color: #745e3a;
+        }
+
+        /* Responsive: en pantallas pequeñas, la columna de logos se coloca arriba o se achica */
+        @media (max-width: 850px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            .logos-col {
+                width: 100%;
+                height: 35vh;
+                min-height: 200px;
+            }
+            .form-col {
+                padding: 1rem;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .field-group.full-width {
+                grid-column: span 1;
+            }
+            .summary-row {
+                grid-template-columns: 1fr;
+                gap: 0.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- Columna izquierda: imagen que ocupa toda la altura (sin márgenes, sin fondo, sin texto) -->
+    <div class="logos-col">
+        <img src="tol.png" alt="Gobierno del Estado de México y Toluca Capital" onerror="this.src='https://placehold.co/400x800?text=Toluca+EdoMex';">
+    </div>
+
+    <!-- Columna derecha: formulario -->
+    <div class="form-col">
+        <div class="form-card">
+            <div class="card-header">
+                <h1>Sistema de Registro de Actividades</h1>
+                <p>Complete los campos. Antes de guardar podrá revisar la información en un pop-up de confirmación.</p>
+            </div>
+
+            <form id="activityForm">
+                <div class="form-grid">
+                    <!-- Responsable fijo (sin icono) -->
+                    <div class="field-group">
+                        <label>Responsable (fijo)</label>
+                        <input type="text" id="responsable" value="Coordinación General" readonly>
+                    </div>
+
+                    <!-- Unidad Administrativa -->
+                    <div class="field-group">
+                        <label>Unidad Administrativa</label>
+                        <select id="unidad_administrativa" required>
+                            <option value="" disabled selected>Selecciona una unidad</option>
+                            <option>Coordinación de Apoyo Técnico</option><option>Unidad de Diagnóstico Social </option><option>Delegación Administrativa</option><option>Unidad de Ambiente de Paz</option>
+                            <option>Departamento de Gestión y Vinculación</option><option>Departamento de Integración Ciudadana</option><option>Dirección de Programas Sociales y Asuntos Indígenas</option><option>Departamento de Programas Sociales</option>
+                            <option>Departamento de Mejoramiento a la Vivienda</option><option>Departamento de Asuntos Indígenas</option><option>Dirección de Apoyo a la Juventud, Recreación y Convivenvia Social</option><option>Departamento de Vinculación e Impulso Juvenil</option>
+                            <option>Departamento de Recreación y Convivencia Social</option><option>Dirección de Convivencia Social, Inclusión y No Discriminación</option><option>Departamento de Prevención Social y Comunitaria</option><option>Departamento de Atención a Grupos en Situación de Vulnerabilidad</option>
+                            <option>Dirección General de Bienestar</option>
+                        </select>
+                    </div>
+
+                    <!-- Mes -->
+                    <div class="field-group">
+                        <label>Mes</label>
+                        <select id="mes">
+                            <option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option>
+                            <option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio">Junio</option>
+                            <option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option>
+                            <option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option>
+                        </select>
+                    </div>
+
+                    <!-- Día (select) -->
+                    <div class="field-group">
+                        <label>Día</label>
+                        <select id="dia">
+                            <option value="" disabled selected>Selecciona día</option>
+                        </select>
+                    </div>
+
+                    <!-- Hora -->
+                    <div class="field-group">
+                        <label>Hora</label>
+                        <select id="hora">
+                            <option value="" disabled selected>Selecciona hora</option>
+                        </select>
+                    </div>
+
+                    <!-- Lugar -->
+                    <div class="field-group">
+                        <label>Lugar</label>
+                        <select id="lugar">
+                            <option value="" disabled selected>Selecciona un lugar</option>
+                            <option>Calle</option><option>Camino vecinal</option><option>Centro de Bienestar</option>
+                            <option>Escuela</option><option>Espacio Deportivo</option><option>Oficina</option>
+                            <option>Panteón</option><option>Parque</option><option>Plaza</option><option>Otro</option>
+                        </select>
+                    </div>
+
+                    <!-- Delegación -->
+                    <div class="field-group">
+                        <label>Delegación</label>
+                        <select id="delegacion">
+                            <option value="" disabled selected>Selecciona delegación</option>
+                            <option>01 Centro Histórico</option><option>02 Barrios Tradicionales</option><option>03 Arbol de las Manitas</option>
+                            <option>04 La Maquinita</option><option>05 Independencia</option><option>06 San Sebastian</option>
+                            <option>07 Universidad</option><option>08 Santa Maria de las Rosas</option><option>09 Del Parque</option>
+                            <option>10 Metropolitana</option><option>11 Colón</option><option>12 Moderna de la Cruz</option>
+                            <option>13 Ocho Cedros</option><option>14 Seminario Conciliar</option><option>15 Seminario 2 de Marzo</option>
+                            <option>16 Seminario Las Torres</option><option>17 Morelos</option><option>18 Ciudad Universitaria</option>
+                            <option>19 Nueva Oxtotitlan</option><option>20 Adolfo Lopez Mateos</option><option>21 Sanchez</option>
+                            <option>22 Cacalomacán</option><option>23 Calixtlahuaca</option><option>24 Capultitlan</option>
+                            <option>25 San Andres Cuexcontitlan</option><option>26 San Antonio Buenavista</option><option>27 San Buenaventura</option>
+                            <option>28 San Cristobal Huichochitlan</option><option>29 San Felipe Tlalmimilolpan</option><option>30 San Juan Tilapa</option>
+                            <option>31 San Lorenzo Tepaltitlan</option><option>32 San Marcos Yachihuacaltepec</option><option>33 San Martin Toltepec</option>
+                            <option>34 San Mateo Otzacatipan</option><option>35 San Mateo Oxtotitlan</option><option>36 San Pablo Autopan</option>
+                            <option>37 San Pedro Totoltepec</option><option>38 Santa Ana Tlapaltitlan</option><option>39 Santa Cruz Atzcapotzaltongo</option>
+                            <option>40 Santa Mara Totoltepec</option><option>41 Santiago Miltepec</option><option>42 Santiago Tlacotepec</option>
+                            <option>43 Santiago Tlaxomulco</option><option>44 Tecaxic</option><option>45 Tlachaloya</option>
+                            <option>46 San Cayetano Morelos</option><option>47 El Cerrillo Vista Hermosa</option><option>48 Sauces</option>
+                        </select>
+                    </div>
+<!-- Subdelegacion -->
+<div class="field-group">
+    <label>Subdelegación</label>
+    <select id="subdelegacion">
+        <option value="" selected>No aplica</option>
+    </select>
+</div>
+
+                    <!-- Domicilio -->
+                    <div class="field-group">
+                        <label>Domicilio</label>
+                        <input type="text" id="domicilio" placeholder="Calle, número, colonia">
+                    </div>
+
+                    <!-- Actividad -->
+                    <div class="field-group">
+                        <label>Actividad</label>
+                        <select id="actividad">
+                            <option value="" disabled selected>Selecciona actividad</option>
+                            <option>1_01_INFORME</option><option>1_02_DOCUMENTO</option><option>1_03_SESIÓN</option>
+                            <option>1_04_INFORME</option><option>1_05_INFORME</option><option>1_06 INFORME</option>
+                            <option>1_07_INFORME</option><option>1_08_EVENTO</option><option>1_09_AGENDA</option>
+                        </select>
+                    </div>
+
+                    <!-- Cantidad -->
+                    <div class="field-group">
+                        <label>Beneficiarios y/o asistentes</label>
+                        <input type="number" id="cantidad" placeholder="Número de asistentes/recursos" min="0" step="1">
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="field-group full-width">
+                        <label>Descripción</label>
+                        <textarea id="descripcion" placeholder="Detalles adicionales (alfanumérico)"></textarea>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <button type="button" class="btn btn-secondary" id="limpiarBtn">Limpiar</button>
+                    <button type="button" class="btn btn-primary" id="guardarBtn">Guardar</button>
+                </div>
+
+                <div class="warning-note">
+                    <strong>¡IMPORTANTE!</strong> Verifica tus datos antes de guardar. Al presionar GUARDAR se abrirá una ventana de confirmación. Una vez confirmado, el registro será permanente (no se podrá eliminar).
+                </div>
+            </form>
+        </div>
+        <footer>Sistema oficial de registro | Datos protegidos  Hecho por: </footer>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>Verifica los datos capturados</h3>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="data-summary" id="modalDataSummary"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelModalBtn">Cancelar</button>
+            <button class="btn btn-primary" id="confirmSaveBtn">Confirmar y guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Poblar días y horas
+    function populateDays() {
+        const diaSelect = document.getElementById('dia');
+        diaSelect.innerHTML = '<option value="" disabled selected>Selecciona día</option>';
+        for (let i = 1; i <= 31; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            diaSelect.appendChild(option);
+        }
+    }
+
+    function populateHours() {
+        const horaSelect = document.getElementById('hora');
+        horaSelect.innerHTML = '<option value="" disabled selected>Selecciona hora</option>';
+        for (let h = 8; h <= 22; h++) {
+            for (let m of [0, 30]) {
+                let hourStr = h.toString().padStart(2,'0');
+                let minuteStr = m.toString().padStart(2,'0');
+                let value = `${hourStr}:${minuteStr}`;
+                let option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                horaSelect.appendChild(option);
+            }
+        }
+    }
+
+    function getCurrentFormData() {
+        return {
+            responsable: document.getElementById('responsable')?.value.trim() || '',
+            unidadAdministrativa: document.getElementById('unidad_administrativa')?.value || '',
+            mes: document.getElementById('mes')?.value || '',
+            dia: document.getElementById('dia')?.value || '',
+            hora: document.getElementById('hora')?.value || '',
+            lugar: document.getElementById('lugar')?.value || '',
+            delegacion: document.getElementById('delegacion')?.value || '',
+            domicilio: document.getElementById('domicilio')?.value.trim() || '',
+            actividad: document.getElementById('actividad')?.value || '',
+            cantidad: document.getElementById('cantidad')?.value || '',
+            descripcion: document.getElementById('descripcion')?.value.trim() || '',
+        };
+    }
+
+    function validateRequiredFields(data) {
+        if (!data.unidadAdministrativa) { mostrarToast("Selecciona la Unidad Administrativa", true); return false; }
+        if (!data.actividad) { mostrarToast("Selecciona la Actividad", true); return false; }
+        if (!data.lugar) { mostrarToast("Selecciona el Lugar", true); return false; }
+        if (!data.delegacion) { mostrarToast("Selecciona la Delegación", true); return false; }
+        if (!data.dia) { mostrarToast("Selecciona el Día", true); return false; }
+        if (!data.hora) { mostrarToast("Selecciona la Hora", true); return false; }
+        if (!data.mes) { mostrarToast("Selecciona el Mes", true); return false; }
+        return true;
+    }
+
+    function mostrarToast(mensaje, isError = false) {
+        let toast = document.querySelector('.toast-msg');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            document.body.appendChild(toast);
+        }
+        toast.style.background = isError ? '#a90303e6' : '#2a6b47e6';
+        toast.innerText = mensaje;
+        toast.style.opacity = '1';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+        }, 2800);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function renderModalData(data) {
+        const container = document.getElementById('modalDataSummary');
+        if (!container) return;
+        container.innerHTML = `
+            <div class="summary-row"><span class="summary-label">Responsable:</span><span class="summary-value">${escapeHtml(data.responsable || '—')}</span></div>
+            <div class="summary-row"><span class="summary-label">Unidad Administrativa:</span><span class="summary-value">${escapeHtml(data.unidadAdministrativa || '—')}</span></div>
+            <div class="summary-row"><span class="summary-label">Mes / Día / Hora:</span><span class="summary-value">${escapeHtml(data.mes)} ${escapeHtml(data.dia)} · ${escapeHtml(data.hora)}</span></div>
+            <div class="summary-row"><span class="summary-label">Lugar:</span><span class="summary-value">${escapeHtml(data.lugar)}</span></div>
+            <div class="summary-row"><span class="summary-label">Delegación:</span><span class="summary-value">${escapeHtml(data.delegacion)}</span></div>
+            <div class="summary-row"><span class="summary-label">Domicilio:</span><span class="summary-value">${escapeHtml(data.domicilio) || 'No especificado'}</span></div>
+            <div class="summary-row"><span class="summary-label">Actividad:</span><span class="summary-value">${escapeHtml(data.actividad)}</span></div>
+            <div class="summary-row"><span class="summary-label">Cantidad:</span><span class="summary-value">${escapeHtml(data.cantidad) || '0'}</span></div>
+            <div class="summary-row"><span class="summary-label">Descripción:</span><span class="summary-value">${escapeHtml(data.descripcion) || 'Sin descripción'}</span></div>
+        `;
+    }
+
+    function performFinalSave(formData) {
+        let registros = [];
+        const stored = localStorage.getItem('actividades_registros_permanentes');
+        if (stored) {
+            try {
+                registros = JSON.parse(stored);
+            } catch(e) { registros = []; }
+        }
+        const nuevoRegistro = {
+            id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+            fechaRegistro: new Date().toISOString(),
+            ...formData
+        };
+        registros.push(nuevoRegistro);
+        localStorage.setItem('actividades_registros_permanentes', JSON.stringify(registros));
+        mostrarToast(`Actividad "${formData.actividad}" guardada permanentemente. No se puede eliminar.`, false);
+        closeModal();
+    }
+
+    const modal = document.getElementById('confirmModal');
+    function openModal() { modal.classList.add('active'); }
+    function closeModal() { modal.classList.remove('active'); }
+
+    function onGuardarClick() {
+        const formData = getCurrentFormData();
+        if (!validateRequiredFields(formData)) return;
+        renderModalData(formData);
+        openModal();
+    }
+
+    function onConfirmSave() {
+        const formData = getCurrentFormData();
+        if (!validateRequiredFields(formData)) {
+            closeModal();
+            return;
+        }
+        performFinalSave(formData);
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('unidad_administrativa').value = '';
+        document.getElementById('mes').selectedIndex = 0;
+        document.getElementById('dia').selectedIndex = 0;
+        document.getElementById('hora').selectedIndex = 0;
+        document.getElementById('lugar').selectedIndex = 0;
+        document.getElementById('delegacion').selectedIndex = 0;
+        document.getElementById('domicilio').value = '';
+        document.getElementById('actividad').selectedIndex = 0;
+        document.getElementById('cantidad').value = '';
+        document.getElementById('descripcion').value = '';
+        mostrarToast("Formulario limpiado (responsable se mantiene fijo)", false);
+    }
+
+    function init() {
+const delegacion = document.getElementById("delegacion");
+const subdelegacion = document.getElementById("subdelegacion");
+
+delegacion.addEventListener("change", function () {
+
+    const seleccion = this.value;
+
+    subdelegacion.innerHTML = "";
+
+    if (!subdelegaciones[seleccion]) {
+
+        subdelegacion.innerHTML =
+            '<option value="">No aplica</option>';
+
+        return;
+    }
+
+    subdelegacion.innerHTML =
+        '<option value="" disabled selected>Selecciona una subdelegación</option>';
+
+    subdelegaciones[seleccion].forEach(sub => {
+
+        const option = document.createElement("option");
+
+        option.value = sub;
+        option.textContent = sub;
+
+        subdelegacion.appendChild(option);
+
+    });
+
+});
+        populateDays();
+        populateHours();
+
+        const guardarBtn = document.getElementById('guardarBtn');
+        const limpiarBtn = document.getElementById('limpiarBtn');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        if (guardarBtn) guardarBtn.addEventListener('click', onGuardarClick);
+        if (limpiarBtn) limpiarBtn.addEventListener('click', limpiarFormulario);
+        if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+        if (confirmSaveBtn) confirmSaveBtn.addEventListener('click', onConfirmSave);
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    }
+const subdelegaciones = {
+
+    "23 Calixtlahuaca": [
+        "Palmillas"
+    ],
+
+    "25 San Andres Cuexcontitlan": [
+        "Ejido de San Diego de los Padres Cuexcontitlán",
+        "San Diego de los Padres Cuexcontitlán",
+        "Jicaltepec Cuexcontitlán",
+        "Sección Siete",
+        "La Loma Cuexcontitlán"
+    ],
+
+    "27 San Buenaventura": [
+        "Guadalupe San Buenaventura"
+    ],
+
+    "33 San Martin Toltepec": [
+        "La Palma Toltepec",
+        "Sebastián Lerdo de Tejada",
+        "Ejido de San Marcos Yachihuacaltepec"
+    ],
+
+    "34 San Mateo Otzacatipan": [
+        "La Magdalena Otzacatipan",
+        "Santa Cruz Otzacatipan",
+        "San José Guadalupe Otzacatipan",
+        "San Diego de los Padres Otzacatipan",
+        "San Blas Otzacatipan",
+        "San Nicolás Tolentino",
+        "Crespa Floresta"
+    ],
+
+    "35 San Mateo Oxtotitlan": [
+        "Niños Héroes",
+        "Filiberto Navas"
+    ],
+
+    "36 San Pablo Autopan": [
+        "Ojo de Agua",
+        "Aviación Autopan",
+        "San Carlos Autopan",
+        "San Diego Linares Autopan",
+        "Jicaltepec Autopan"
+    ],
+
+    "37 San Pedro Totoltepec": [
+        "San Miguel Totoltepec",
+        "Barrio de San Francisco Totoltepec",
+        "Guadalupe Totoltepec",
+        "San Blas Totoltepec",
+        "La Constitución Totoltepec",
+        "Arroyo Vista Hermosa"
+    ],
+
+    "38 Santa Ana Tlapaltitlan": [
+        "Santa María Zozoquipan",
+        "Buenavista"
+    ],
+
+    "40 Santa Mara Totoltepec": [
+        "El Carmen Totoltepec"
+    ],
+
+    "42 Santiago Tlacotepec": [
+        "El Refugio"
+    ],
+
+    "45 Tlachaloya": [
+        "Tlachaloya Segunda Sección",
+        "San José La Costa"
+    ],
+
+    "46 San Cayetano Morelos": [
+        "Cerrillo Piedras Blancas"
+    ]
+};
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

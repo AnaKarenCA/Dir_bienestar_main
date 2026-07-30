@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Carpeta de Evento - Sistema PbRM</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f7f5f2;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid rgba(128, 0, 0, 0.15);
+        }
+
+        /* Encabezado */
+        .header {
+            background-color: #800000;
+            color: #ffffff;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+        }
+
+        /* Secciones */
+        .section {
+            padding: 25px 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-title {
+            color: #800000;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #800000;
+            letter-spacing: 0.5px;
+        }
+
+        /* Controles de Formulario */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        input[type="number"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #fff;
+            color: #333;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #800000;
+            box-shadow: 0 0 0 2px rgba(128,0,0,0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .file-input-wrapper {
+            border: 2px dashed #ccc;
+            padding: 15px;
+            text-align: center;
+            border-radius: 4px;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .file-input-wrapper.disabled {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        th {
+            background-color: #800000;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 10px 12px;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background-color: #fcfcfc;
+        }
+
+        /* Botones */
+        .btn {
+            background-color: #800000;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: #600000;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            padding: 6px 12px;
+        }
+        .btn-danger:hover {
+            background-color: #bd2130;
+        }
+
+        .btn-action-lock {
+            background-color: #28a745;
+            margin-top: 10px;
+        }
+        .btn-action-lock:hover {
+            background-color: #218838;
+        }
+
+        /* Resúmenes y Alertas */
+        .duration-summary {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+            border-left: 4px solid #800000;
+            transition: all 0.3s ease;
+        }
+
+        .duration-summary.alert-active {
+            border-left-color: #dc3545;
+            background-color: #fff3f3;
+            color: #721c24;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* Panel Presídium */
+        .presidium-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .presidium-canvas-panel {
+            background-color: #fdfdfd;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+        }
+
+        .presidium-visual {
+            width: 100%;
+            height: 240px;
+            border: 1px dashed rgba(128, 0, 0, 0.2);
+            position: relative;
+            background: #fff;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .presidium-shape-black {
+            position: absolute;
+            background-color: #111;
+            transform: translate(-50%, -50%);
+            opacity: 0.85;
+            z-index: 5;
+        }
+
+        .presidium-spot {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: #800000;
+            color: #fff;
+            font-weight: bold;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+            z-index: 10;
+        }
+
+        .presidium-spot.center-spot {
+            background-color: #333;
+            border: 2px solid rgba(255,255,255,0.6);
+        }
+
+        .presidium-list-panel {
+            background-color: #fdfdfd;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .presidium-row-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .spot-tag {
+            width: 35px;
+            font-weight: bold;
+            color: #800000;
+            text-align: center;
+            background: rgba(128, 0, 0, 0.08);
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        .footer-actions {
+            background-color: #f1ede8;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Editar Carpeta</h1>
+        <div class="status-badge">Registro: Actividad_registrada | Estado: Pendiente</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D1. Portada</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nombre de la Dirección que realiza el evento *</label>
+                <input type="text" required placeholder="Dirección operadora">
+            </div>
+            <div class="form-group">
+                <label>Nombre del Evento *</label>
+                <input type="text" required placeholder="Nombre oficial">
+            </div>
+            <div class="form-group">
+                <label>Aprobado por (fijo)</label>
+                <input type="text" value="Aprobado por Coordinación Institucional y Enlace Administrativo">
+            </div>
+            <div class="form-group">
+                <label>Responsable del Evento (nombre del director)</label>
+                <input type="text" placeholder="Director de Área">
+            </div>
+            <div class="form-group">
+                <label>Fecha de entrega</label>
+                <input type="date">
+            </div>
+            <div class="form-group">
+                <label>Fecha del evento</label>
+                <input type="date" id="main-date" onchange="syncDates(this.value)">
+            </div>
+            <div class="form-group full-width">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <label>Imagen de fondo (Diseño para el evento)</label>
+                    <label style="font-weight: normal; font-size: 13px;">
+                        <input type="checkbox" id="bg-in-progress" onchange="toggleBgInput(this.checked)"> Marcar como En Proceso (No editable)
+                    </label>
+                </div>
+                <div class="file-input-wrapper" id="bg-wrapper">
+                    <span>Seleccionar diseño del evento...</span>
+                    <input type="file" id="bg-file-field" style="display:none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D2. Objetivo y Beneficiarios</div>
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label>Línea de acción PbRM</label>
+                <input type="text" placeholder="Código o descripción de la línea">
+            </div>
+            <div class="form-group">
+                <label>Objetivo del PbRM</label>
+                <input type="text" placeholder="Objetivo general PbRM">
+            </div>
+            <div class="form-group">
+                <label>Objetivo del Evento</label>
+                <input type="text" placeholder="Propósito específico">
+            </div>
+            <div class="form-group">
+                <label>Número de beneficiarios</label>
+                <input type="number" placeholder="Asistentes esperados">
+            </div>
+            <div class="form-group">
+                <label>Fecha del evento (resumen)</label>
+                <input type="date" id="resumen-date" readonly style="background:#eee;">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D3. Justificación</div>
+        <div class="form-group full-width">
+            <label>Justificación e impacto del evento</label>
+            <textarea placeholder="Explicar las razones e impactos del evento..."></textarea>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D4. Generales del Evento</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="gen-date" readonly style="background:#eee;">
+            </div>
+            <div class="form-group">
+                <label>Hora inicio</label>
+                <input type="time" id="start-time" value="09:00" onchange="calculateAgenda()">
+            </div>
+            <div class="form-group">
+                <label>Lugar</label>
+                <input type="text" placeholder="Sede del evento">
+            </div>
+            <div class="form-group">
+                <label>Vestimenta</label>
+                <select>
+                    <option>Formal</option>
+                    <option>Casual</option>
+                    <option>Formal-Casual</option>
+                    <option>Deportiva</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Duración del Evento límite configurada (min)</label>
+                <input type="number" id="limit-duration" value="540" onchange="calculateAgenda()">
+            </div>
+            <div class="form-group">
+                <label>Coordinación del Evento</label>
+                <input type="text" placeholder="Área coordinadora">
+            </div>
+            <div class="form-group full-width">
+                <label>Responsable del Evento (nombre + unidad)</label>
+                <input type="text" placeholder="Nombre completo y sigla de Unidad">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D5. Ubicación del Evento</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Dirección</label><input type="text"></div>
+            <div class="form-group"><label>Link de Google Maps</label><input type="url"></div>
+            <div class="form-group"><label>Foto del lugar</label><input type="file"></div>
+            <div class="form-group"><label>Foto Google Maps</label><input type="file"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D6. Orden del Día - Programa Protocolario</div>
+        <table id="agenda-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Hora Inicio</th>
+                    <th style="width: 45%;">Actividad</th>
+                    <th style="width: 25%;">Responsable</th>
+                    <th style="width: 15%;">Duración (min)</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="row-start" readonly style="background:#eee; width:100%;"></td>
+                    <td><input type="text" style="width:100%;" placeholder="Actividad inicial"></td>
+                    <td><input type="text" style="width:100%;" placeholder="Responsable"></td>
+                    <td><input type="number" class="row-dur" value="30" style="width:100%;" onchange="calculateAgenda()"></td>
+                    <td><button type="button" class="btn btn-danger" onclick="this.closest('tr').remove(); calculateAgenda();">✕</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" class="btn" onclick="addAgendaRow()">+ Agregar actividad</button>
+        <div class="duration-summary" id="duration-alert-box">
+            Fin del evento - Duración total calculada del programa: <strong id="total-calculated-label">30</strong> min<br>
+            Duración total límite configurada (del bloque generales): <strong id="total-limit-label">540</strong> min
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D7. Presídium</div>
+        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+            <div class="form-group">
+                <label>Tipo de Presídium</label>
+                <select id="p-type" onchange="renderPresidium()" style="width:250px;">
+                    <option value="lineal">Lineal</option>
+                    <option value="herradura">Herradura</option>
+                    <option value="media_luna">Media Luna</option>
+                    <option value="redondo">Redondo</option>
+                    <option value="rusa">Rusa</option>
+                    <option value="cuadrada">Cuadrada</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Lugares del Presídium</label>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn btn-secondary" onclick="adjustSpots(-1)">-</button>
+                    <strong style="padding:10px; font-size:16px;" id="spots-count">5</strong>
+                    <button class="btn btn-secondary" onclick="adjustSpots(1)">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="presidium-container">
+            <div class="presidium-canvas-panel">
+                <h4>Distribución Visual</h4>
+                <div class="presidium-visual" id="p-canvas"></div>
+            </div>
+            <div class="presidium-list-panel">
+                <h4>Asignación de Autoridades (Jerarquía Protocolaria)</h4>
+                <div id="p-inputs"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D8. Croquis del Evento</div>
+        <div class="form-group"><label>Imagen del croquis de montaje</label><input type="file"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D9. Invitados Especiales (Cabildo, Gabinete, externos)</div>
+        <table id="t-specials">
+            <thead><tr><th style="width:10%;">N°</th><th style="width:50%;">Persona invitada</th><th style="width:40%;">Cargo (Negritas)</th><th>Acciones</th></tr></thead>
+            <tbody>
+                <tr><td>1</td><td><input type="text" style="width:100%;"></td><td><input type="text" style="width:100%; font-weight:bold;"></td><td><button class="btn btn-danger" onclick="removeGenericRow(this, 't-specials')">✕</button></td></tr>
+            </tbody>
+        </table>
+        <button class="btn" onclick="addSpecialsRow()">+ Agregar invitado</button>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D10. Módulos Jornada Integral</div>
+        <table id="t-modules">
+            <thead><tr><th style="width:10%;">N°</th><th style="width:50%;">Institución</th><th style="width:40%;">Servicio</th><th>Acciones</th></tr></thead>
+            <tbody>
+                <tr><td>1</td><td><input type="text" style="width:100%;"></td><td><input type="text" style="width:100%;"></td><td><button class="btn btn-danger" onclick="removeGenericRow(this, 't-modules')">✕</button></td></tr>
+            </tbody>
+        </table>
+        <button class="btn" onclick="addModulesRow()">+ Agregar módulo</button>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D11. Requerimientos Operativos</div>
+        
+        <h4 style="font-size:14px; margin-bottom:10px; color:#555;">REQUERIMIENTOS INTERNOS (Comunicación Social)</h4>
+        <table id="t-int">
+            <thead><tr><th style="width:15%;">Cantidad</th><th style="width:50%;">Insumo</th><th style="width:35%;">Unidad</th><th>Acciones</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><input type="number" value="10" class="rcant" style="width:100%;"></td>
+                    <td><select class="rins" style="width:100%;"><option>Sillas</option><option>Mesas tipo tablón</option><option>Extensiones eléctricas</option><option>Multicontacto 6 entradas</option></select></td>
+                    <td><input type="text" value="Pza" class="runi" style="width:100%;"></td>
+                    <td><button class="btn btn-danger" onclick="this.closest('tr').remove()">✕</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-secondary" onclick="addRequirementRow('t-int', ['Sillas','Mesas tipo tablón','Extensiones eléctricas','Multicontacto 6 entradas'])">+ Interno</button>
+        
+        <h4 style="font-size:14px; margin: 20px 0 10px 0; color:#555;">REQUERIMIENTOS EXTERNOS (Administración)</h4>
+        <table id="t-ext">
+            <thead><tr><th style="width:15%;">Cantidad</th><th style="width:50%;">Insumo</th><th style="width:35%;">Unidad</th><th>Acciones</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><input type="number" value="1" class="rcant" style="width:100%;"></td>
+                    <td><select class="rins" style="width:100%;"><option>Carpa</option><option>Mampara</option><option>Planta de luz</option><option>Templete</option></select></td>
+                    <td><input type="text" value="Estructura" class="runi" style="width:100%;"></td>
+                    <td><button class="btn btn-danger" onclick="this.closest('tr').remove()">✕</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-secondary" onclick="addRequirementRow('t-ext', ['Carpa','Mampara','Planta de luz','Templete'])">+ Externo</button>
+        
+        <div style="margin-top:15px;">
+            <button class="btn btn-action-lock" onclick="lockAndConsolidate()">Solicitar y Bloquear Recursos</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">D12. Requerimientos Finales y Firmas</div>
+        <div id="consolidated-container" style="margin-bottom:25px;">
+            <p style="color:#666; font-style:italic; font-size:13px;">Ningún recurso pre-apartado aún. Presione el botón "Solicitar y Bloquear Recursos" en la sección D11 para consolidar el inventario de insumos aprobados.</p>
+        </div>
+        <div class="form-grid">
+            <div class="form-group"><label>Firma 1: Coordinador de Apoyo Técnico</label><div style="border:1px dashed #999; height:80px; background:#fafafa; border-radius:4px;"></div></div>
+            <div class="form-group"><label>Firma 2: Delegado Administrativo</label><div style="border:1px dashed #999; height:80px; background:#fafafa; border-radius:4px;"></div></div>
+        </div>
+    </div>
+
+    <div class="footer-actions">
+        <button class="btn btn-secondary" onclick="alert('Regresando...')">Volver a Eventos</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" onclick="alert('Generando Presentación PowerPoint institucional...')">Generar PowerPoint</button>
+            <button class="btn" onclick="alert('Carpeta guardada exitosamente con candados de inventario.')">💾 Guardar Carpeta</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSpots = 5;
+    let savedNames = {}; 
+    let savedCargos = {};
+
+    function syncDates(val) {
+        document.getElementById('resumen-date').value = val;
+        document.getElementById('gen-date').value = val;
+    }
+
+    function toggleBgInput(checked) {
+        const wrapper = document.getElementById('bg-wrapper');
+        const fileField = document.getElementById('bg-file-field');
+        if(checked) {
+            wrapper.classList.add('disabled');
+            fileField.disabled = true;
+            wrapper.querySelector('span').innerText = "En Proceso — No Editable";
+        } else {
+            wrapper.classList.remove('disabled');
+            fileField.disabled = false;
+            wrapper.querySelector('span').innerText = "Seleccionar diseño del evento...";
+        }
+    }
+
+    function calculateAgenda() {
+        const start = document.getElementById('start-time').value || "09:00";
+        const limit = parseInt(document.getElementById('limit-duration').value) || 540;
+        const rows = document.querySelectorAll('#agenda-table tbody tr');
+        let [h, m] = start.split(':').map(Number);
+        let total = 0;
+
+        rows.forEach(r => {
+            r.querySelector('.row-start').value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            let dur = parseInt(r.querySelector('.row-dur').value) || 0;
+            total += dur;
+            m += dur; h += Math.floor(m/60); m = m%60; h = h%24;
+        });
+
+        document.getElementById('total-calculated-label').innerText = total;
+        document.getElementById('total-limit-label').innerText = limit;
+        const alertBox = document.getElementById('duration-alert-box');
+
+        if(total > limit) {
+            alertBox.classList.add('alert-active');
+            alert(`⚠️ Fin del evento - Duración total calculada del programa: ${total} min\nDuración total límite configurada (del bloque generales): ${limit} min.`);
+        } else {
+            alertBox.classList.remove('alert-active');
+        }
+    }
+
+    function addAgendaRow() {
+        const tbody = document.querySelector('#agenda-table tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><input type="text" class="row-start" readonly style="background:#eee; width:100%;"></td><td><input type="text" style="width:100%;"></td><td><input type="text" style="width:100%;"></td><td><input type="number" class="row-dur" value="15" style="width:100%;" onchange="calculateAgenda()"></td><td><button type="button" class="btn btn-danger" onclick="this.closest('tr').remove(); calculateAgenda();">✕</button></td>`;
+        tbody.appendChild(tr);
+        calculateAgenda();
+    }
+
+    function adjustSpots(amt) {
+        currentSpots += amt;
+        if(currentSpots < 1) currentSpots = 1;
+        if(currentSpots > 15) currentSpots = 15;
+        document.getElementById('spots-count').innerText = currentSpots;
+        renderPresidium();
+    }
+
+    function savePresidiumState() {
+        for(let i = 0; i < 15; i++) {
+            let nI = document.getElementById(`name-${i}`);
+            let cI = document.getElementById(`cargo-${i}`);
+            if(nI) savedNames[i] = nI.value;
+            if(cI) savedCargos[i] = cI.value;
+        }
+    }
+
+    function renderPresidium() {
+        savePresidiumState();
+        const type = document.getElementById('p-type').value;
+        const canvas = document.getElementById('p-canvas');
+        const inputs = document.getElementById('p-inputs');
+        canvas.innerHTML = ''; 
+        inputs.innerHTML = '';
+
+        let order = ['*']; 
+        for(let i = 1; i < currentSpots; i++) order.push(i);
+
+        // Renderizado del objeto/mesa negra física si no es lineal
+        if(type !== 'lineal') {
+            const shape = document.createElement('div');
+            shape.className = 'presidium-shape-black';
+            if(type === 'redondo') {
+                shape.style.width = '130px'; shape.style.height = '130px'; shape.style.borderRadius = '50%';
+                shape.style.left = '50%'; shape.style.top = '50%';
+            } else if(type === 'herradura') {
+                shape.style.width = '150px'; shape.style.height = '100px'; shape.style.border = '15px solid #111';
+                shape.style.borderBottom = 'none'; shape.style.borderRadius = '80px 80px 0 0';
+                shape.style.left = '50%'; shape.style.top = '55%';
+            } else if(type === 'rusa') {
+                shape.style.width = '160px'; shape.style.height = '90px'; shape.style.border = '15px solid #111';
+                shape.style.borderBottom = 'none'; shape.style.left = '50%'; shape.style.top = '55%';
+            } else {
+                shape.style.width = '160px'; shape.style.height = '20px';
+                shape.style.left = '50%'; shape.style.top = '50%';
+            }
+            canvas.appendChild(shape);
+        } else {
+            canvas.innerHTML = '<div style="padding:40px; color:#666; font-size:13px; text-align:center;">Distribución Lineal: Mapeo por lista en plano (Puntos visuales deshabilitados)</div>';
+        }
+
+        order.forEach((spot, index) => {
+            // Lógica matemática del plano cartesiano: *=0, 1=-1, 2=1, 3=-2, 4=2
+            let x_cartesian = 0; 
+            if(spot !== '*') {
+                x_cartesian = (spot % 2 !== 0) ? -Math.ceil(spot/2) : Math.ceil(spot/2);
+            }
+
+            let left = 50 + (x_cartesian * 10); 
+            let top = 50;
+
+            if(type === 'redondo') {
+                let angle = (index / order.length) * 2 * Math.PI - (Math.PI / 2); // Inicia en centro superior
+                left = 50 + 32 * Math.cos(angle);
+                top = 50 + 32 * Math.sin(angle);
+            } else if(type === 'herradura' || type === 'media_luna') {
+                let angle = (index / Math.max(1, order.length - 1)) * Math.PI;
+                left = 50 + 35 * Math.cos(angle + Math.PI);
+                top = 45 + 32 * Math.sin(angle + Math.PI);
+            } else if(type === 'rusa') {
+                let segment = Math.max(1, order.length - 1);
+                left = 20 + (index * (60 / segment));
+                top = (index === 0 || index === order.length-1) ? 65 : 40;
+            } else if(type === 'cuadrada') {
+                left = 25 + (index % 4) * 16;
+                top = 30 + Math.floor(index / 4) * 18;
+            }
+
+            // Dibujar punto en plano cartesiano si no es lineal
+            if(type !== 'lineal') {
+                const sDiv = document.createElement('div');
+                sDiv.className = `presidium-spot ${spot==='*'?'center-spot':''}`;
+                sDiv.style.left = `${left}%`; 
+                sDiv.style.top = `${top}%`; 
+                sDiv.innerText = spot;
+                canvas.appendChild(sDiv);
+            }
+
+            // Inputs con persistencia de datos
+            const row = document.createElement('div'); 
+            row.className = 'presidium-row-item';
+            let side = spot === '*' ? 'Centro (0,0)' : (spot % 2 !== 0 ? `X: ${x_cartesian} (Der)` : `X: ${x_cartesian} (Izq)`);
+            let oldN = savedNames[index] || ''; 
+            let oldC = savedCargos[index] || '';
+
+            row.innerHTML = `<div class="spot-tag">${spot}</div><input type="text" id="name-${index}" value="${oldN}" style="flex:1;" placeholder="${side}"><input type="text" id="cargo-${index}" value="${oldC}" style="width:35%;" placeholder="Cargo">`;
+            inputs.appendChild(row);
+        });
+    }
+
+    function addSpecialsRow() {
+        const tbody = document.querySelector('#t-specials tbody');
+        let count = tbody.rows.length + 1;
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td>${count}</td><td><input type="text" style="width:100%;"></td><td><input type="text" style="width:100%; font-weight:bold;"></td><td><button class="btn btn-danger" onclick="removeGenericRow(this, 't-specials')">✕</button></td>`;
+        tbody.appendChild(tr);
+    }
+
+    function addModulesRow() {
+        const tbody = document.querySelector('#t-modules tbody');
+        let count = tbody.rows.length + 1;
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td>${count}</td><td><input type="text" style="width:100%;"></td><td><input type="text" style="width:100%;"></td><td><button class="btn btn-danger" onclick="removeGenericRow(this, 't-modules')">✕</button></td>`;
+        tbody.appendChild(tr);
+    }
+
+    function removeGenericRow(btn, tableId) {
+        btn.closest('tr').remove();
+        let rows = document.querySelectorAll(`#${tableId} tbody tr`);
+        rows.forEach((r, idx) => r.cells[0].innerText = idx + 1);
+    }
+
+    function addRequirementRow(tableId, options) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        let tr = document.createElement('tr');
+        let optHtml = options.map(o => `<option>${o}</option>`).join('');
+        tr.innerHTML = `<td><input type="number" value="1" class="rcant" style="width:100%;"></td><td><select class="rins" style="width:100%;">${optHtml}</select></td><td><input type="text" value="Pza" class="runi" style="width:100%;"></td><td><button class="btn btn-danger" onclick="this.closest('tr').remove()">✕</button></td>`;
+        tbody.appendChild(tr);
+    }
+
+    function lockAndConsolidate() {
+        const container = document.getElementById('consolidated-container');
+        container.innerHTML = '<h4 style="font-size:14px; margin-bottom:10px; color:#800000;">CONSOLIDADO DE REQUERIMIENTOS SOLICITADOS</h4>';
+        
+        const table = document.createElement('table');
+        table.innerHTML = '<thead><tr><th>Origen</th><th>Cantidad</th><th>Insumo</th><th>Unidad</th></tr></thead>';
+        const tbody = document.createElement('tbody');
+
+        // Consolidación internos
+        document.querySelectorAll('#t-int tbody tr').forEach(r => {
+            let c = r.querySelector('.rcant').value; let i = r.querySelector('.rins').value; let u = r.querySelector('.runi').value;
+            tbody.innerHTML += `<tr><td><span style="color:#28a745; font-weight:bold;">Interno</span></td><td>${c}</td><td><strong>${i}</strong></td><td>${u}</td></tr>`;
+        });
+
+        // Consolidación externos
+        document.querySelectorAll('#t-ext tbody tr').forEach(r => {
+            let c = r.querySelector('.rcant').value; let i = r.querySelector('.rins').value; let u = r.querySelector('.runi').value;
+            tbody.innerHTML += `<tr><td><span style="color:#007bff; font-weight:bold;">Externo</span></td><td>${c}</td><td><strong>${i}</strong></td><td>${u}</td></tr>`;
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+        alert("Insumos bloqueados exitosamente en inventario e inyectados al bloque de firmas D12.");
+    }
+
+    window.onload = function() {
+        calculateAgenda();
+        renderPresidium();
+    };
+</script>
+</body>
+</html>
