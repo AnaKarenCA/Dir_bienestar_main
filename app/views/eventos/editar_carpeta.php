@@ -137,7 +137,7 @@
         .status-justificado { background: #6c757d; color: #fff; }
         .footer-actions { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
         table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        table th { background: #f8f9fa; padding: 8px; text-align: left; font-weight: 600; }
+        table th { background: #800000; padding: 8px; text-align: left; font-weight: 600; }
         table td { padding: 6px; border-bottom: 1px solid #eee; }
         .file-label { display: inline-block; padding: 6px 12px; background: #e9ecef; border-radius: 4px; cursor: pointer; }
         .empty-msg { color: #6c757d; font-style: italic; }
@@ -160,7 +160,6 @@
         <input type="hidden" name="registro_actividad_id" value="<?= $registro['id'] ?? '' ?>">
         <input type="hidden" name="evento_id" value="<?= $evento['id'] ?? '' ?>">
         <input type="hidden" name="estado" value="<?= $carpeta['estado'] ?? 'pendiente' ?>">
-        <!-- CAMPO OCULTO PARA NUM_SPOTS (CRÍTICO) -->
         <input type="hidden" name="num_spots" id="num_spots" value="<?= $evento['num_spots'] ?? 5 ?>">
 
         <!-- ===== D1. PORTADA ===== -->
@@ -322,13 +321,7 @@
             <div id="ordenContainer">
                 <table id="ordenTable">
                     <thead>
-                        <tr>
-                            <th style="width:15%;">Hora Inicio</th>
-                            <th style="width:35%;">Actividad</th>
-                            <th style="width:25%;">Responsable</th>
-                            <th style="width:15%;">Duración (min)</th>
-                            <th style="width:10%;">Acciones</th>
-                        </tr>
+                        <tr><th style="width:15%;">Hora Inicio</th><th style="width:35%;">Actividad</th><th style="width:25%;">Responsable</th><th style="width:15%;">Duración (min)</th><th style="width:10%;">Acciones</th></tr>
                     </thead>
                     <tbody id="ordenBody">
                         <?php if (!empty($ordenes)): ?>
@@ -415,22 +408,9 @@
             </div>
             <input type="hidden" name="tipo_presidium_seleccionado" id="tipoPresidiumHidden" value="<?= $tipoPresidiumSeleccionado ?? 'lineal' ?>">
             <input type="hidden" name="presidium_data" id="presidiumData">
-            <!-- Campo oculto para num_spots (ya existe arriba, pero lo mantengo visible) -->
         </div>
 
-        <!-- ===== D8. CROQUIS DEL EVENTO ===== -->
-        <div class="section">
-            <div class="section-title"><span class="material-symbols-outlined">map</span>Croquis del Evento</div>
-            <div class="form-group full-width">
-                <label>Imagen del croquis</label>
-                <input type="file" name="imagen_croquis" accept="image/*">
-                <?php if (!empty($evento['imagen_croquis'])): ?>
-                    <div style="margin-top:4px;"><img src="<?= htmlspecialchars($evento['imagen_croquis']) ?>" style="max-height:100px;"></div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- ===== D9. INVITADOS ESPECIALES ===== -->
+        <!-- ===== D8. INVITADOS ESPECIALES ===== -->
         <div class="section">
             <div class="section-title"><span class="material-symbols-outlined">person_add</span>Invitados Especiales (Cabildo, Gabinete, externos)</div>
             <table id="t-specials">
@@ -439,7 +419,7 @@
                 </thead>
                 <tbody id="invitadosBody">
                     <?php
-                    $invitadosList = $invitadosList ?? [];
+                    $invitadosList = (is_array($invitadosList) ? $invitadosList : []);
                     if (!empty($invitadosList)):
                         foreach ($invitadosList as $idx => $inv):
                     ?>
@@ -462,7 +442,7 @@
             <button type="button" class="btn btn-secondary" onclick="agregarFilaInvitados()">+ Agregar invitado</button>
         </div>
 
-        <!-- ===== D10. MÓDULOS JORNADA INTEGRAL ===== -->
+        <!-- ===== D9. MÓDULOS JORNADA INTEGRAL ===== -->
         <div class="section">
             <div class="section-title"><span class="material-symbols-outlined">grid_view</span>Módulos Jornada Integral</div>
             <table id="t-modules">
@@ -471,7 +451,7 @@
                 </thead>
                 <tbody id="modulosBody">
                     <?php
-                    $modulosList = $modulosList ?? [];
+                    $modulosList = (is_array($modulosList) ? $modulosList : []);
                     if (!empty($modulosList)):
                         foreach ($modulosList as $idx => $mod):
                     ?>
@@ -494,10 +474,11 @@
             <button type="button" class="btn btn-secondary" onclick="agregarFilaModulos()">+ Agregar módulo</button>
         </div>
 
-        <!-- ===== D11. REQUERIMIENTOS ===== -->
+        <!-- ===== D10. REQUERIMIENTOS ===== -->
         <div class="section">
             <div class="section-title"><span class="material-symbols-outlined">list_alt</span>Requerimientos Operativos</div>
 
+            <!-- Internos -->
             <h4 style="font-size:14px; margin-bottom:10px; color:#800000;">Requerimientos Internos (Delegación Administrativa)</h4>
             <table id="t-int">
                 <thead>
@@ -505,7 +486,7 @@
                 </thead>
                 <tbody id="reqInternosBody">
                     <?php
-                    $internos = $internos ?? [];
+                    $internos = (is_array($internos) ? $internos : []);
                     if (!empty($internos)):
                         foreach ($internos as $idx => $item):
                     ?>
@@ -519,7 +500,7 @@
                                             data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>"
                                             data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>"
                                             data-stock="<?= $ins['stock_total'] ?>">
-                                            <?= htmlspecialchars($ins['nombre_insumo']) ?>
+                                            <?= htmlspecialchars($ins['nombre_insumo'] . ' (' . ($ins['medida'] ?? '') . ' ' . ($ins['unidad'] ?? '') . ')') ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -535,7 +516,12 @@
                                 <select name="req_internos[0][insumo_id]" class="rins" style="width:100%;" onchange="actualizarMedidaUnidad(this)">
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($insumosInternos as $ins): ?>
-                                        <option value="<?= $ins['id'] ?>" data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>" data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>" data-stock="<?= $ins['stock_total'] ?>"><?= htmlspecialchars($ins['nombre_insumo']) ?></option>
+                                        <option value="<?= $ins['id'] ?>"
+                                            data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>"
+                                            data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>"
+                                            data-stock="<?= $ins['stock_total'] ?>">
+                                            <?= htmlspecialchars($ins['nombre_insumo'] . ' (' . ($ins['medida'] ?? '') . ' ' . ($ins['unidad'] ?? '') . ')') ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>
@@ -548,6 +534,7 @@
             </table>
             <button type="button" class="btn btn-secondary" onclick="agregarFilaReq('t-int', 'internos')">+ Agregar requerimiento interno</button>
 
+            <!-- Externos -->
             <div style="margin: 20px 0 10px;">
                 <h4 style="font-size:14px; margin-bottom:10px; color:#800000;">Requerimientos Externos (Dirección General de Administración)</h4>
             </div>
@@ -557,7 +544,7 @@
                 </thead>
                 <tbody id="reqExternosBody">
                     <?php
-                    $externos = $externos ?? [];
+                    $externos = (is_array($externos) ? $externos : []);
                     if (!empty($externos)):
                         foreach ($externos as $idx => $item):
                     ?>
@@ -571,7 +558,7 @@
                                             data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>"
                                             data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>"
                                             data-stock="<?= $ins['stock_total'] ?>">
-                                            <?= htmlspecialchars($ins['nombre_insumo']) ?>
+                                            <?= htmlspecialchars($ins['nombre_insumo'] . ' (' . ($ins['medida'] ?? '') . ' ' . ($ins['unidad'] ?? '') . ')') ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -587,7 +574,12 @@
                                 <select name="req_externos[0][insumo_id]" class="rins" style="width:100%;" onchange="actualizarMedidaUnidad(this)">
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($insumosExternos as $ins): ?>
-                                        <option value="<?= $ins['id'] ?>" data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>" data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>" data-stock="<?= $ins['stock_total'] ?>"><?= htmlspecialchars($ins['nombre_insumo']) ?></option>
+                                        <option value="<?= $ins['id'] ?>"
+                                            data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>"
+                                            data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>"
+                                            data-stock="<?= $ins['stock_total'] ?>">
+                                            <?= htmlspecialchars($ins['nombre_insumo'] . ' (' . ($ins['medida'] ?? '') . ' ' . ($ins['unidad'] ?? '') . ')') ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>
@@ -600,18 +592,76 @@
             </table>
             <button type="button" class="btn btn-secondary" onclick="agregarFilaReq('t-ext', 'externos')">+ Agregar requerimiento externo</button>
 
+            <!-- Comunicación Social -->
+            <div style="margin: 20px 0 10px;">
+                <h4 style="font-size:14px; margin-bottom:10px; color:#800000;">Comunicación Social</h4>
+            </div>
+            <table id="t-com">
+                <thead>
+                    <tr><th style="width:15%;">Cantidad</th><th style="width:40%;">Insumo</th><th style="width:25%;">Medida</th><th style="width:20%;">Unidad</th><th style="width:10%;">Acciones</th></tr>
+                </thead>
+                <tbody id="reqComunicacionBody">
+                    <?php
+                    $comunicacion = (is_array($comunicacion) ? $comunicacion : []);
+                    if (!empty($comunicacion)):
+                        foreach ($comunicacion as $idx => $item):
+                    ?>
+                        <tr>
+                            <td><input type="number" name="req_comunicacion[<?= $idx ?>][cantidad]" value="<?= $item['cantidad'] ?? 1 ?>" min="1" class="rcant" style="width:100%;"></td>
+                            <td>
+                                <select name="req_comunicacion[<?= $idx ?>][insumo_id]" class="rins" style="width:100%;" onchange="actualizarMedidaUnidad(this)">
+                                    <option value="">Seleccione...</option>
+                                    <?php foreach ($insumosComunicacion as $ins): ?>
+                                        <option value="<?= $ins['id'] ?>" <?= ($item['insumo_id'] ?? '') == $ins['id'] ? 'selected' : '' ?>
+                                            data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>"
+                                            data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>"
+                                            data-stock="<?= $ins['stock_total'] ?>">
+                                            <?= htmlspecialchars($ins['nombre_insumo'] . ' (' . ($ins['medida'] ?? '') . ' ' . ($ins['unidad'] ?? '') . ')') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td><input type="text" name="req_comunicacion[<?= $idx ?>][medida]" value="<?= htmlspecialchars($item['medida'] ?? '') ?>" placeholder="Medida" class="rmedida" style="width:100%;" readonly></td>
+                            <td><input type="text" name="req_comunicacion[<?= $idx ?>][unidad]" value="<?= htmlspecialchars($item['unidad'] ?? '') ?>" placeholder="Unidad" class="runidad" style="width:100%;" readonly></td>
+                            <td><button type="button" class="btn btn-danger" onclick="eliminarFilaReq(this)">✕</button></td>
+                        </tr>
+                    <?php endforeach; else: ?>
+                        <tr>
+                            <td><input type="number" name="req_comunicacion[0][cantidad]" value="1" min="1" class="rcant" style="width:100%;"></td>
+                            <td>
+                                <select name="req_comunicacion[0][insumo_id]" class="rins" style="width:100%;" onchange="actualizarMedidaUnidad(this)">
+                                    <option value="">Seleccione...</option>
+                                    <?php foreach ($insumosComunicacion as $ins): ?>
+                                        <option value="<?= $ins['id'] ?>"
+                                            data-medida="<?= htmlspecialchars($ins['medida'] ?? '') ?>"
+                                            data-unidad="<?= htmlspecialchars($ins['unidad'] ?? '') ?>"
+                                            data-stock="<?= $ins['stock_total'] ?>">
+                                            <?= htmlspecialchars($ins['nombre_insumo'] . ' (' . ($ins['medida'] ?? '') . ' ' . ($ins['unidad'] ?? '') . ')') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td><input type="text" name="req_comunicacion[0][medida]" placeholder="Medida" class="rmedida" style="width:100%;" readonly></td>
+                            <td><input type="text" name="req_comunicacion[0][unidad]" placeholder="Unidad" class="runidad" style="width:100%;" readonly></td>
+                            <td><button type="button" class="btn btn-danger" onclick="eliminarFilaReq(this)">✕</button></td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-secondary" onclick="agregarFilaReq('t-com', 'comunicacion')">+ Agregar requerimiento de comunicación</button>
+
             <div style="margin-top:20px;">
                 <button type="button" class="btn btn-action-lock" onclick="lockAndConsolidate()">Solicitar y Bloquear Recursos</button>
             </div>
         </div>
 
-        <!-- ===== D12. REQUERIMIENTOS FINALES Y FIRMAS ===== -->
+        <!-- ===== D11. REQUERIMIENTOS FINALES Y FIRMAS ===== -->
         <div class="section">
             <div class="section-title"><span class="material-symbols-outlined">check_circle</span>Requerimientos Finales y Firmas</div>
             <div id="consolidated-container">
                 <?php
-                $internos = $internos ?? [];
-                $externos = $externos ?? [];
+                $internos = (is_array($internos) ? $internos : []);
+                $externos = (is_array($externos) ? $externos : []);
                 if (!empty($internos) || !empty($externos)):
                 ?>
                     <h4 style="font-size:14px; margin-bottom:10px; color:#800000;">Consolidado de Requerimientos Solicitados</h4>
@@ -619,22 +669,10 @@
                         <thead><tr><th>Origen</th><th>Cantidad</th><th>Insumo</th><th>Medida</th><th>Unidad</th></tr></thead>
                         <tbody>
                             <?php foreach ($internos as $item): ?>
-                                <tr>
-                                    <td><span style="color:#28a745; font-weight:bold;">Interno</span></td>
-                                    <td><?= $item['cantidad'] ?? 1 ?></td>
-                                    <td><strong><?= htmlspecialchars($item['nombre_insumo'] ?? '') ?></strong></td>
-                                    <td><?= htmlspecialchars($item['medida'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($item['unidad'] ?? '') ?></td>
-                                </tr>
+                                <tr><td><span style="color:#28a745; font-weight:bold;">Interno</span></td><td><?= $item['cantidad'] ?? 1 ?></td><td><strong><?= htmlspecialchars($item['nombre_insumo'] ?? '') ?></strong></td><td><?= htmlspecialchars($item['medida'] ?? '') ?></td><td><?= htmlspecialchars($item['unidad'] ?? '') ?></td></tr>
                             <?php endforeach; ?>
                             <?php foreach ($externos as $item): ?>
-                                <tr>
-                                    <td><span style="color:#007bff; font-weight:bold;">Externo</span></td>
-                                    <td><?= $item['cantidad'] ?? 1 ?></td>
-                                    <td><strong><?= htmlspecialchars($item['nombre_insumo'] ?? '') ?></strong></td>
-                                    <td><?= htmlspecialchars($item['medida'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($item['unidad'] ?? '') ?></td>
-                                </tr>
+                                <tr><td><span style="color:#007bff; font-weight:bold;">Externo</span></td><td><?= $item['cantidad'] ?? 1 ?></td><td><strong><?= htmlspecialchars($item['nombre_insumo'] ?? '') ?></strong></td><td><?= htmlspecialchars($item['medida'] ?? '') ?></td><td><?= htmlspecialchars($item['unidad'] ?? '') ?></td></tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -689,7 +727,7 @@
 </div>
 
 <!-- ============================================================
-     JAVASCRIPT
+     JAVASCRIPT (CORREGIDO – USO DE Object.values PARA OBJETOS)
      ============================================================ -->
 <script>
     // ============================================================
@@ -697,30 +735,26 @@
     // ============================================================
     var numSpotsInput = document.getElementById('num_spots');
     var currentSpots = numSpotsInput ? parseInt(numSpotsInput.value) || 5 : 5;
+    var presidiumData = <?= json_encode($presidium) ?>;
     var tipoPresidiumSeleccionado = '<?= $tipoPresidiumSeleccionado ?? "lineal" ?>';
     var usuarios = <?= json_encode($usuarios) ?>;
     var insumosInternos = <?= json_encode($insumosInternos) ?>;
     var insumosExternos = <?= json_encode($insumosExternos) ?>;
+    var insumosComunicacion = <?= json_encode($insumosComunicacion ?? []) ?>;
     var registroHoraInicio = '<?= substr($registro['hora_inicio'] ?? '', 0, 5) ?>';
-
-    var presidiumData = <?= json_encode($presidium) ?>;
-    var savedNames = {};
-    var savedCargos = {};
     var currentType = tipoPresidiumSeleccionado;
 
-    // Inicializar nombres y cargos desde PHP
+    // Inicializar savedNames y savedCargos usando el campo 'orden' como clave
+    var savedNames = {};
+    var savedCargos = {};
     if (presidiumData && presidiumData.length > 0) {
-        var idx = 0;
-        for (var i = 0; i < presidiumData.length; i++) {
-            var p = presidiumData[i];
-            if (p.nombre_invitado === 'Lcdo. Ricardo Moreno Bastida') continue;
-            savedNames[idx] = p.nombre_invitado || '';
-            savedCargos[idx] = p.cargo_invitado || '';
-            idx++;
-        }
-        currentSpots = presidiumData.length;
-        if (numSpotsInput) numSpotsInput.value = currentSpots;
-        document.getElementById('spots-count').innerText = currentSpots;
+        presidiumData.forEach(function(p) {
+            var orden = parseInt(p.orden) || 0;
+            if (orden > 0) {
+                savedNames[orden] = p.nombre_invitado || '';
+                savedCargos[orden] = p.cargo_invitado || '';
+            }
+        });
     }
 
     // ============================================================
@@ -836,15 +870,21 @@
     }
 
     // ============================================================
-    // FUNCIONES DEL PRESÍDIUM (CORREGIDAS)
+    // FUNCIONES DEL PRESÍDIUM
     // ============================================================
     function savePresidiumState() {
         var inputs = document.querySelectorAll('#p-inputs .presidium-row-item');
-        inputs.forEach(function(row, idx) {
+        inputs.forEach(function(row) {
+            var spotTag = row.querySelector('.spot-tag');
             var nameInput = row.querySelector('input[id^="name-"]');
             var cargoInput = row.querySelector('input[id^="cargo-"]');
-            if (nameInput) savedNames[idx] = nameInput.value;
-            if (cargoInput) savedCargos[idx] = cargoInput.value;
+            if (spotTag && nameInput && cargoInput) {
+                var orden = parseInt(spotTag.textContent.trim());
+                if (!isNaN(orden) && orden > 0) {
+                    savedNames[orden] = nameInput.value;
+                    savedCargos[orden] = cargoInput.value;
+                }
+            }
         });
     }
 
@@ -853,13 +893,11 @@
         if (currentSpots < 1) currentSpots = 1;
         if (currentSpots > 15) currentSpots = 15;
         document.getElementById('spots-count').innerText = currentSpots;
-        // ACTUALIZAR EL CAMPO OCULTO num_spots
-        if (numSpotsInput) numSpotsInput.value = currentSpots;
+        document.getElementById('num_spots').value = currentSpots;
         renderPresidium();
     }
 
     function renderPresidium() {
-        // Sincronizar currentSpots con el campo oculto
         if (numSpotsInput) {
             var val = parseInt(numSpotsInput.value);
             if (!isNaN(val) && val > 0) {
@@ -891,7 +929,6 @@
         left.reverse();
         order = left.concat(['*']).concat(right);
 
-        // Dibujar forma negra (según tipo)
         if (type !== 'lineal') {
             var shape = document.createElement('div');
             shape.className = 'presidium-shape-black';
@@ -902,30 +939,17 @@
             shape.style.transform = 'translate(-50%, -50%)';
             shape.style.left = '50%';
             shape.style.top = '50%';
-
             switch (type) {
-                case 'redondo':
-                    shape.style.width = '140px'; shape.style.height = '140px'; shape.style.borderRadius = '50%';
-                    break;
-                case 'herradura':
-                    shape.style.width = '150px'; shape.style.height = '100px'; shape.style.border = '15px solid #111'; shape.style.borderBottom = 'none'; shape.style.borderRadius = '80px 80px 0 0'; shape.style.backgroundColor = 'transparent';
-                    break;
-                case 'media_luna':
-                    shape.style.width = '150px'; shape.style.height = '100px'; shape.style.border = '15px solid #111'; shape.style.borderBottom = 'none'; shape.style.borderRadius = '80px 80px 0 0'; shape.style.backgroundColor = 'transparent'; shape.style.top = '55%';
-                    break;
-                case 'rusa':
-                    shape.style.width = '160px'; shape.style.height = '90px'; shape.style.border = '15px solid #111'; shape.style.borderBottom = 'none'; shape.style.borderRadius = '0'; shape.style.backgroundColor = 'transparent';
-                    break;
-                case 'cuadrada':
-                    shape.style.width = '160px'; shape.style.height = '120px'; shape.style.border = '15px solid #111'; shape.style.borderRadius = '0'; shape.style.backgroundColor = 'transparent';
-                    break;
-                default:
-                    break;
+                case 'redondo': shape.style.width = '140px'; shape.style.height = '140px'; shape.style.borderRadius = '50%'; break;
+                case 'herradura': shape.style.width = '150px'; shape.style.height = '100px'; shape.style.border = '15px solid #111'; shape.style.borderBottom = 'none'; shape.style.borderRadius = '80px 80px 0 0'; shape.style.backgroundColor = 'transparent'; break;
+                case 'media_luna': shape.style.width = '150px'; shape.style.height = '100px'; shape.style.border = '15px solid #111'; shape.style.borderBottom = 'none'; shape.style.borderRadius = '80px 80px 0 0'; shape.style.backgroundColor = 'transparent'; shape.style.top = '55%'; break;
+                case 'rusa': shape.style.width = '160px'; shape.style.height = '90px'; shape.style.border = '15px solid #111'; shape.style.borderBottom = 'none'; shape.style.borderRadius = '0'; shape.style.backgroundColor = 'transparent'; break;
+                case 'cuadrada': shape.style.width = '160px'; shape.style.height = '120px'; shape.style.border = '15px solid #111'; shape.style.borderRadius = '0'; shape.style.backgroundColor = 'transparent'; break;
+                default: break;
             }
             canvas.appendChild(shape);
         }
 
-        // Dibujar spots
         order.forEach(function(spot, index) {
             var leftPos = 50, topPos = 50;
             var totalSpots = order.length;
@@ -934,33 +958,14 @@
                 topPos = 50;
             } else {
                 switch (type) {
-                    case 'redondo':
-                        var angleR = (index / totalSpots) * 2 * Math.PI - Math.PI / 2;
-                        leftPos = 50 + 32 * Math.cos(angleR); topPos = 50 + 32 * Math.sin(angleR);
-                        break;
-                    case 'herradura':
-                        var angleH = (index / (totalSpots - 1)) * Math.PI;
-                        leftPos = 50 + 35 * Math.cos(angleH + Math.PI); topPos = 45 + 32 * Math.sin(angleH + Math.PI);
-                        break;
-                    case 'media_luna':
-                        var angleM = (index / (totalSpots - 1)) * Math.PI;
-                        leftPos = 50 + 35 * Math.cos(angleM); topPos = 55 - 32 * Math.sin(angleM);
-                        break;
-                    case 'rusa':
-                        var seg = Math.max(1, totalSpots - 1);
-                        leftPos = 20 + (index * (60 / seg)); 
-                        topPos = (index === 0 || index === totalSpots - 1) ? 65 : 40;
-                        break;
-                    case 'cuadrada':
-                        var cols = 4;
-                        var row = Math.floor(index / cols); var col = index % cols;
-                        leftPos = 25 + col * 16; topPos = 30 + row * 18;
-                        break;
-                    default:
-                        break;
+                    case 'redondo': var angleR = (index / totalSpots) * 2 * Math.PI - Math.PI / 2; leftPos = 50 + 32 * Math.cos(angleR); topPos = 50 + 32 * Math.sin(angleR); break;
+                    case 'herradura': var angleH = (index / (totalSpots - 1)) * Math.PI; leftPos = 50 + 35 * Math.cos(angleH + Math.PI); topPos = 45 + 32 * Math.sin(angleH + Math.PI); break;
+                    case 'media_luna': var angleM = (index / (totalSpots - 1)) * Math.PI; leftPos = 50 + 35 * Math.cos(angleM); topPos = 55 - 32 * Math.sin(angleM); break;
+                    case 'rusa': var seg = Math.max(1, totalSpots - 1); leftPos = 20 + (index * (60 / seg)); topPos = (index === 0 || index === totalSpots - 1) ? 65 : 40; break;
+                    case 'cuadrada': var cols = 4; var row = Math.floor(index / cols); var col = index % cols; leftPos = 25 + col * 16; topPos = 30 + row * 18; break;
+                    default: break;
                 }
             }
-
             var sDiv = document.createElement('div');
             sDiv.className = 'presidium-spot' + (spot === '*' ? ' center-spot' : '');
             sDiv.style.left = leftPos + '%';
@@ -969,13 +974,12 @@
             canvas.appendChild(sDiv);
         });
 
-        // Generar inputs
         order.forEach(function(spot, index) {
             var row = document.createElement('div');
             row.className = 'presidium-row-item';
-            var oldN = savedNames[index] || '';
-            var oldC = savedCargos[index] || '';
-
+            var numSpot = parseInt(spot);
+            var oldN = !isNaN(numSpot) && numSpot > 0 ? (savedNames[numSpot] || '') : '';
+            var oldC = !isNaN(numSpot) && numSpot > 0 ? (savedCargos[numSpot] || '') : '';
             if (spot === '*') {
                 row.innerHTML = `
                     <div class="spot-tag">*</div>
@@ -985,8 +989,8 @@
             } else {
                 row.innerHTML = `
                     <div class="spot-tag">${spot}</div>
-                    <input type="text" id="name-${index}" value="${oldN}" style="flex:1;" placeholder="Nombre">
-                    <input type="text" id="cargo-${index}" value="${oldC}" style="width:35%;" placeholder="Cargo">
+                    <input type="text" id="name-${spot}" value="${oldN}" style="flex:1;" placeholder="Nombre">
+                    <input type="text" id="cargo-${spot}" value="${oldC}" style="width:35%;" placeholder="Cargo">
                 `;
             }
             inputs.appendChild(row);
@@ -1056,20 +1060,39 @@
     }
 
     // ============================================================
-    // REQUERIMIENTOS
+    // REQUERIMIENTOS (CORREGIDO – USO DE Object.values)
     // ============================================================
     function agregarFilaReq(tableId, tipo) {
         var tbody = document.querySelector('#' + tableId + ' tbody');
         if (!tbody) return;
         var idx = tbody.children.length;
         var tr = document.createElement('tr');
-        var prefijo = tipo === 'internos' ? 'req_internos' : 'req_externos';
-        var options = tipo === 'internos' ? insumosInternos : insumosExternos;
+        var prefijo;
+        var options;
+        if (tipo === 'internos') {
+            prefijo = 'req_internos';
+            options = insumosInternos || {};
+        } else if (tipo === 'externos') {
+            prefijo = 'req_externos';
+            options = insumosExternos || {};
+        } else if (tipo === 'comunicacion') {
+            prefijo = 'req_comunicacion';
+            options = insumosComunicacion || {};
+        } else {
+            return;
+        }
 
         var optHtml = '<option value="">Seleccione...</option>';
-        options.forEach(function(ins) {
-            optHtml += '<option value="' + ins.id + '" data-medida="' + (ins.medida || '') + '" data-unidad="' + (ins.unidad || '') + '" data-stock="' + ins.stock_total + '">' + ins.nombre_insumo + '</option>';
-        });
+        // Convertir el objeto a un array para poder usar forEach
+        var optionsArray = Object.values(options);
+        if (optionsArray && optionsArray.length > 0) {
+            optionsArray.forEach(function(ins) {
+                var medida = ins.medida || '';
+                var unidad = ins.unidad || '';
+                var label = ins.nombre_insumo + (medida || unidad ? ' (' + medida + ' ' + unidad + ')' : '');
+                optHtml += '<option value="' + ins.id + '" data-medida="' + (medida) + '" data-unidad="' + (unidad) + '" data-stock="' + ins.stock_total + '">' + label + '</option>';
+            });
+        }
 
         tr.innerHTML = `
             <td><input type="number" name="${prefijo}[${idx}][cantidad]" value="1" min="1" class="rcant" style="width:100%;"></td>
@@ -1107,16 +1130,7 @@
         var container = document.getElementById('consolidated-container');
         var errores = [];
 
-        document.querySelectorAll('#t-int tbody tr').forEach(function(r) {
-            var cantInput = r.querySelector('.rcant');
-            var select = r.querySelector('.rins');
-            if (select && select.value) {
-                var stock = parseInt(select.options[select.selectedIndex].dataset.stock) || 0;
-                var cantidad = parseInt(cantInput.value) || 0;
-                if (cantidad > stock) errores.push('- ' + select.options[select.selectedIndex].text);
-            }
-        });
-        document.querySelectorAll('#t-ext tbody tr').forEach(function(r) {
+        document.querySelectorAll('#t-int tbody tr, #t-ext tbody tr, #t-com tbody tr').forEach(function(r) {
             var cantInput = r.querySelector('.rcant');
             var select = r.querySelector('.rins');
             if (select && select.value) {
@@ -1131,30 +1145,33 @@
             return;
         }
 
-        var internos = [];
+        var internos = [], externos = [], comunicacion = [];
         document.querySelectorAll('#t-int tbody tr').forEach(function(r) {
             var cant = r.querySelector('.rcant')?.value || 1;
             var select = r.querySelector('.rins');
             var insumo = select ? select.options[select.selectedIndex] : null;
-            var medida = r.querySelector('.rmedida')?.value || '';
-            var unidad = r.querySelector('.runidad')?.value || '';
             if (insumo && insumo.value) {
-                internos.push({ cantidad: cant, insumo_id: insumo.value, nombre_insumo: insumo.text, medida: medida, unidad: unidad });
+                internos.push({ cantidad: cant, insumo_id: insumo.value, nombre_insumo: insumo.text, medida: r.querySelector('.rmedida')?.value || '', unidad: r.querySelector('.runidad')?.value || '' });
             }
         });
-        var externos = [];
         document.querySelectorAll('#t-ext tbody tr').forEach(function(r) {
             var cant = r.querySelector('.rcant')?.value || 1;
             var select = r.querySelector('.rins');
             var insumo = select ? select.options[select.selectedIndex] : null;
-            var medida = r.querySelector('.rmedida')?.value || '';
-            var unidad = r.querySelector('.runidad')?.value || '';
             if (insumo && insumo.value) {
-                externos.push({ cantidad: cant, insumo_id: insumo.value, nombre_insumo: insumo.text, medida: medida, unidad: unidad });
+                externos.push({ cantidad: cant, insumo_id: insumo.value, nombre_insumo: insumo.text, medida: r.querySelector('.rmedida')?.value || '', unidad: r.querySelector('.runidad')?.value || '' });
+            }
+        });
+        document.querySelectorAll('#t-com tbody tr').forEach(function(r) {
+            var cant = r.querySelector('.rcant')?.value || 1;
+            var select = r.querySelector('.rins');
+            var insumo = select ? select.options[select.selectedIndex] : null;
+            if (insumo && insumo.value) {
+                comunicacion.push({ cantidad: cant, insumo_id: insumo.value, nombre_insumo: insumo.text, medida: r.querySelector('.rmedida')?.value || '', unidad: r.querySelector('.runidad')?.value || '' });
             }
         });
 
-        if (internos.length === 0 && externos.length === 0) {
+        if (internos.length === 0 && externos.length === 0 && comunicacion.length === 0) {
             alert('No hay requerimientos para solicitar.');
             return;
         }
@@ -1167,6 +1184,9 @@
         externos.forEach(function(item) {
             html += '<tr><td><span style="color:#007bff; font-weight:bold;">Externo</span></td><td>' + item.cantidad + '</td><td><strong>' + item.nombre_insumo + '</strong></td><td>' + item.medida + '</td><td>' + item.unidad + '</td></tr>';
         });
+        comunicacion.forEach(function(item) {
+            html += '<tr><td><span style="color:#6f42c1; font-weight:bold;">Comunicación</span></td><td>' + item.cantidad + '</td><td><strong>' + item.nombre_insumo + '</strong></td><td>' + item.medida + '</td><td>' + item.unidad + '</td></tr>';
+        });
         html += '</tbody></table>';
         if (container) container.innerHTML = html;
         alert('✅ Insumos bloqueados exitosamente.');
@@ -1178,41 +1198,39 @@
     function enviarFormulario() {
         var form = document.getElementById('carpetaForm');
         if (!form) return;
-        
-        // Asegurar que num_spots tenga el valor correcto antes de enviar
-        if (numSpotsInput) {
-            numSpotsInput.value = currentSpots;
-        }
 
-        var formData = new FormData(form);
+        document.getElementById('num_spots').value = currentSpots;
 
-        // Recolectar datos del presídium (todos los spots, incluyendo vacíos)
         var presidiumList = [];
-        document.querySelectorAll('#p-inputs .presidium-row-item').forEach(function(row, idx) {
+        var filas = document.querySelectorAll('#p-inputs .presidium-row-item');
+        filas.forEach(function(row) {
             var spotTag = row.querySelector('.spot-tag');
             var nombreInput = row.querySelector('input[id^="name-"]');
             var cargoInput = row.querySelector('input[id^="cargo-"]');
             if (spotTag && nombreInput && cargoInput) {
-                var spot = spotTag.innerText;
-                var nombre = nombreInput.value;
-                var cargo = cargoInput.value;
+                var spot = spotTag.textContent.trim();
                 if (spot !== '*') {
                     presidiumList.push({
-                        orden: spot,
-                        nombre: nombre,
-                        cargo: cargo
+                        orden: parseInt(spot, 10),
+                        nombre: nombreInput.value || '',
+                        cargo: cargoInput.value || ''
                     });
                 }
             }
         });
+
+        console.log('num_spots:', currentSpots);
+        console.log('presidium_data:', JSON.stringify(presidiumList));
+
+        var formData = new FormData(form);
         formData.append('presidium_data', JSON.stringify(presidiumList));
 
         fetch('/Dir_bienestar/eventos/guardar_carpeta', {
             method: 'POST',
             body: formData
         })
-        .then(function(response) { return response.json(); })
-        .then(function(result) {
+        .then(response => response.json())
+        .then(result => {
             if (result.success) {
                 alert('✅ Carpeta guardada correctamente.');
                 if (result.carpeta_id) {
@@ -1222,7 +1240,7 @@
                 alert('❌ Error: ' + (result.error || 'No se pudo guardar'));
             }
         })
-        .catch(function(error) {
+        .catch(error => {
             console.error('Error:', error);
             alert('❌ Error de conexión. Revisa la consola para más detalles.');
         });

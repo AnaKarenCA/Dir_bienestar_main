@@ -66,6 +66,7 @@ class EventoDetalle extends Model
                         modulos_jornada = ?,
                         requerimientos_internos = ?,
                         requerimientos_externos = ?,
+                        requerimientos_comunicacion = ?,
                         comunicacion_social = ?,
                         delegacion_admin_resumen = ?,
                         fecha_entrega = ?,
@@ -95,6 +96,7 @@ class EventoDetalle extends Model
                 $datos['modulos_jornada'] ?? '[]',
                 $datos['requerimientos_internos'] ?? '[]',
                 $datos['requerimientos_externos'] ?? '[]',
+                $datos['requerimientos_comunicacion'] ?? '[]', // NUEVO
                 $datos['comunicacion_social'] ?? '',
                 $datos['delegacion_admin_resumen'] ?? '',
                 $datos['fecha_entrega'] ?? null,
@@ -110,8 +112,8 @@ class EventoDetalle extends Model
                         imagen_croquis, aprobado_por, responsable_evento, coordinacion_evento,
                         maestra_ceremonias, num_spots,
                         invitados_especiales, modulos_jornada, requerimientos_internos, requerimientos_externos,
-                        comunicacion_social, delegacion_admin_resumen, fecha_entrega, firma
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        requerimientos_comunicacion, comunicacion_social, delegacion_admin_resumen, fecha_entrega, firma
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $this->db->query($sql);
             $result = $stmt->execute([
                 $datos['carpeta_id'],
@@ -136,6 +138,7 @@ class EventoDetalle extends Model
                 $datos['modulos_jornada'] ?? '[]',
                 $datos['requerimientos_internos'] ?? '[]',
                 $datos['requerimientos_externos'] ?? '[]',
+                $datos['requerimientos_comunicacion'] ?? '[]', // NUEVO
                 $datos['comunicacion_social'] ?? '',
                 $datos['delegacion_admin_resumen'] ?? '',
                 $datos['fecha_entrega'] ?? null,

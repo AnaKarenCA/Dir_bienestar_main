@@ -97,6 +97,11 @@ class ComposerStaticInitac2d307f4ed514763a8119f3523066bb
             'Svg\\' => 4,
             'Sabberworm\\CSS\\' => 15,
         ),
+        'P' => 
+        array (
+            'PhpOffice\\PhpPresentation\\' => 26,
+            'PhpOffice\\Common\\' => 17,
+        ),
         'M' => 
         array (
             'Masterminds\\' => 12,
@@ -120,6 +125,14 @@ class ComposerStaticInitac2d307f4ed514763a8119f3523066bb
         array (
             0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/src',
         ),
+        'PhpOffice\\PhpPresentation\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpoffice/phppresentation/src/PhpPresentation',
+        ),
+        'PhpOffice\\Common\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpoffice/common/src/Common',
+        ),
         'Masterminds\\' => 
         array (
             0 => __DIR__ . '/..' . '/masterminds/html5/src',
@@ -137,6 +150,7 @@ class ComposerStaticInitac2d307f4ed514763a8119f3523066bb
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Dompdf\\Cpdf' => __DIR__ . '/..' . '/dompdf/dompdf/lib/Cpdf.php',
+        'PclZip' => __DIR__ . '/..' . '/pclzip/pclzip/pclzip.lib.php',
         'Safe\\DateTime' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/DateTime.php',
         'Safe\\DateTimeImmutable' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/DateTimeImmutable.php',
         'Safe\\Exceptions\\ApacheException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ApacheException.php',

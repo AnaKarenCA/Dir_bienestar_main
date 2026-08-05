@@ -82,42 +82,41 @@ class Carpeta extends Model
 
     /**
      * Obtiene las carpetas pendientes de revisión para una unidad (o todas si $unidadId es null)
-     * Incluye los estados: entregado, revisado, fuera_tiempo
+     * Incluye los estados: entregado, revisado, fuera_tiempo (si tiene justificación)
+     * 
+     * @param int|null $unidadId ID de la unidad administrativa (opcional)
+     * @return array Lista de carpetas pendientes de revisión
      */
     public function obtenerPendientesRevision($unidadId = null)
     {
+        // Construir la consulta con las condiciones WHERE
         $sql = "SELECT c.*, 
-                       u.nombre AS usuario_nombre,
-                       u.puesto AS usuario_puesto,
-                       ua.nombre AS unidad_nombre,
-                       ua.id AS unidad_administrativa_id,
-                       ap.descripcion AS actividad_desc,
-                       r.descripcion AS registro_descripcion,
-                       r.fecha_inicio,
-                       r.fecha_fin,
-                       r.hora_inicio,
-                       r.hora_fin,
-                       r.lugar_id,
-                       r.beneficiarios_asistentes,
-                       r.tipo_entregable_id
+                       ra.id as registro_id, 
+                       ra.fecha_inicio, 
+                       ra.fecha_fin,
+                       ra.hora_inicio,
+                       ra.hora_fin,
+                       u.nombre as usuario_nombre,
+                       ua.nombre as unidad_nombre,
+                       ua.id as unidad_administrativa_id
                 FROM carpeta c
-                JOIN registro_actividad r ON r.id = c.registro_actividad_id
-                JOIN usuario u ON u.id = r.usuario_id
-                LEFT JOIN unidad_administrativa ua ON ua.id = r.unidad_administrativa_id
-                LEFT JOIN actividad_programada ap ON ap.id = r.actividad_programada_id
-                WHERE c.estado IN ('entregado', 'revisado', 'fuera_tiempo')";
-        
+                JOIN registro_actividad ra ON ra.id = c.registro_actividad_id
+                JOIN usuario u ON u.id = c.realizo_id
+                JOIN unidad_administrativa ua ON ua.id = ra.unidad_administrativa_id
+                WHERE c.estado IN ('entregado', 'revisado')";
+        $params = [];
+
+        // Agregar filtro por unidad si se proporciona
         if ($unidadId) {
-            $sql .= " AND r.unidad_administrativa_id = ?";
+            $sql .= " AND ra.unidad_administrativa_id = ?";
+            $params[] = $unidadId;
         }
+
+        // Ordenar al final
         $sql .= " ORDER BY c.fecha_entrega DESC";
 
         $stmt = $this->db->query($sql);
-        if ($unidadId) {
-            $stmt->execute([$unidadId]);
-        } else {
-            $stmt->execute();
-        }
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
@@ -126,15 +125,15 @@ class Carpeta extends Model
      * a partir del ID de registro_actividad
      */
     public function obtenerConDatosCompletos($registroActividadId)
-{
-    $sql = "SELECT c.*, ed.id AS evento_detalle_id
-            FROM carpeta c
-            LEFT JOIN evento_detalle ed ON ed.carpeta_id = c.id
-            WHERE c.registro_actividad_id = ?";
-    $stmt = $this->db->query($sql);
-    $stmt->execute([$registroActividadId]);
-    return $stmt->fetch();
-}
+    {
+        $sql = "SELECT c.*, ed.id AS evento_detalle_id
+                FROM carpeta c
+                LEFT JOIN evento_detalle ed ON ed.carpeta_id = c.id
+                WHERE c.registro_actividad_id = ?";
+        $stmt = $this->db->query($sql);
+        $stmt->execute([$registroActividadId]);
+        return $stmt->fetch();
+    }
 
     /**
      * Obtiene una carpeta por su ID

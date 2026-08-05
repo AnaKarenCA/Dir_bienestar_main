@@ -10,6 +10,11 @@ class ActividadController extends Controller
         }
     }
 
+    /**
+     * Guarda una o varias actividades (un registro por día)
+     * 
+     * @return void (JSON)
+     */
     public function guardar()
     {
         header('Content-Type: application/json');
@@ -24,7 +29,29 @@ class ActividadController extends Controller
             return;
         }
 
-        // Validar campos requeridos
+        // ============================================================
+        // FORZAR UNIDAD DEL USUARIO SI ES PERSONAL (rol=3)
+        // ============================================================
+        $usuarioModel = $this->model('Usuario');
+        $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
+        
+        if (!$usuario) {
+            echo json_encode(['success' => false, 'error' => 'Usuario no encontrado']);
+            return;
+        }
+
+        // Si el usuario es Personal (rol=3), forzar su unidad
+        if ($usuario['rol_id'] == 3) {
+            $data['unidad_administrativa_id'] = $usuario['unidad_administrativa_id'];
+        } 
+        // Si es Admin, Jefe o Coordinador y no envió unidad, usar la suya
+        elseif (empty($data['unidad_administrativa_id']) && in_array($usuario['rol_id'], [1, 2, 5])) {
+            $data['unidad_administrativa_id'] = $usuario['unidad_administrativa_id'];
+        }
+
+        // ============================================================
+        // VALIDACIONES
+        // ============================================================
         $required = [
             'unidad_administrativa_id', 'actividad_programada_id', 'unidad_medida_id',
             'lugar_id', 'delegacion_id', 'calle', 'numero_exterior',
@@ -67,7 +94,9 @@ class ActividadController extends Controller
             return;
         }
 
-        // --- Manejo de lugar "Otro" ---
+        // ============================================================
+        // MANEJO DE LUGAR "Otro"
+        // ============================================================
         $lugar_id = (int)$data['lugar_id'];
         if ($lugar_id === 0) {
             if (empty($data['otro_lugar'])) {
@@ -75,12 +104,10 @@ class ActividadController extends Controller
                 return;
             }
             $lugarModel = $this->model('Lugar');
-            // Verificar si el modelo existe
             if (!$lugarModel) {
                 echo json_encode(['success' => false, 'error' => 'Modelo Lugar no encontrado']);
                 return;
             }
-            // Método obtenerPorNombre
             if (!method_exists($lugarModel, 'obtenerPorNombre')) {
                 echo json_encode(['success' => false, 'error' => 'Método obtenerPorNombre no existe en Lugar']);
                 return;
@@ -97,7 +124,9 @@ class ActividadController extends Controller
             }
         }
 
-        // --- Crear domicilio ---
+        // ============================================================
+        // CREAR DOMICILIO
+        // ============================================================
         $domicilioModel = $this->model('Domicilio');
         if (!$domicilioModel) {
             echo json_encode(['success' => false, 'error' => 'Modelo Domicilio no encontrado']);
@@ -115,7 +144,9 @@ class ActividadController extends Controller
             return;
         }
 
-        // --- Guardar registros por cada día ---
+        // ============================================================
+        // GUARDAR REGISTROS POR CADA DÍA
+        // ============================================================
         $registroModel = $this->model('RegistroActividad');
         if (!$registroModel) {
             echo json_encode(['success' => false, 'error' => 'Modelo RegistroActividad no encontrado']);
@@ -150,11 +181,15 @@ class ActividadController extends Controller
             echo json_encode(['success' => false, 'error' => 'Error al guardar actividad(es)']);
         }
     }
+
+    /**
+     * Muestra las actividades programadas de la unidad del usuario
+     */
     public function misActividades()
-{
-    $unidadId = $_SESSION['usuario_unidad_id'] ?? 0;
-    $actividadModel = $this->model('ActividadProgramada');
-    $actividades = $actividadModel->obtenerPorUnidad($unidadId);
-    $this->view('actividades/mis_actividades', ['actividades' => $actividades]);
-}
+    {
+        $unidadId = $_SESSION['usuario_unidad_id'] ?? 0;
+        $actividadModel = $this->model('ActividadProgramada');
+        $actividades = $actividadModel->obtenerPorUnidad($unidadId);
+        $this->view('actividades/mis_actividades', ['actividades' => $actividades]);
+    }
 }

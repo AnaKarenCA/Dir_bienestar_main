@@ -4,7 +4,7 @@ class PresidiumAsistente extends Model
 {
     public function obtenerPorEventoDetalleId($eventoDetalleId)
     {
-        $sql = "SELECT * FROM presidium_asistente WHERE evento_detalle_id = ? ORDER BY id";
+        $sql = "SELECT * FROM presidium_asistente WHERE evento_detalle_id = ? ORDER BY orden ASC";
         $stmt = $this->db->query($sql);
         $stmt->execute([$eventoDetalleId]);
         return $stmt->fetchAll();
@@ -17,21 +17,22 @@ class PresidiumAsistente extends Model
         $stmtDel = $this->db->query($sqlDel);
         $stmtDel->execute([$eventoDetalleId]);
 
-        // 2. Insertar nuevos
         if (empty($presidium)) {
             return true;
         }
 
+        // 2. Insertar todos los spots (incluyendo vacíos)
         $sql = "INSERT INTO presidium_asistente 
-                (evento_detalle_id, tipo_presidium_id, nombre_invitado, cargo_invitado) 
-                VALUES (?, ?, ?, ?)";
+                (evento_detalle_id, tipo_presidium_id, nombre_invitado, cargo_invitado, orden) 
+                VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->db->query($sql);
         foreach ($presidium as $p) {
             $stmt->execute([
                 $eventoDetalleId,
                 $p['tipo_presidium_id'],
-                $p['nombre_invitado'],
-                $p['cargo_invitado']
+                $p['nombre_invitado'] ?? '',
+                $p['cargo_invitado'] ?? '',
+                $p['orden']
             ]);
         }
         return true;

@@ -332,9 +332,7 @@
                             $fechaFin = $reg['fecha_fin'] ?? $reg['fecha_inicio'];
                             $fechaEntrega = $reg['fecha_entrega'] ?? null;
 
-                            // --------------------------------------------------------------
-                            // NUEVA REGLA: detectar si la evidencia se subió fuera de tiempo
-                            // --------------------------------------------------------------
+                            // Detectar si la evidencia se subió fuera de tiempo
                             $subidoFueraTiempo = false;
                             if (!empty($fechaEntrega) && !empty($fechaFin)) {
                                 $entregaObj = new DateTime($fechaEntrega);
@@ -346,11 +344,9 @@
 
                             // Asignar badge según la nueva regla
                             if ($subidoFueraTiempo) {
-                                // SIEMPRE rojo, sin importar el estado
                                 $badgeClass = 'estado-fuera_tiempo';
                                 $badgeLabel = 'Fuera de tiempo';
                             } else {
-                                // Color según estado actual
                                 $badgeClass = 'estado-' . $estado;
                                 $badgeLabel = ucfirst(str_replace('_', ' ', $estado));
                             }
@@ -372,13 +368,18 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($tieneEvidencia): ?>
-                                    <a href="<?= $evidenciaLink ?>" class="evidencia-link" target="_blank"><?= $evidenciaNombre ?></a>
-                                    <span style="font-size:0.6rem; color:#888; display:block;">Subido: <?= date('d/m/Y', strtotime($reg['fecha_entrega'] ?? 'now')) ?></span>
-                                <?php else: ?>
-                                    <span style="color:#999;"><?= $evidenciaNombre ?></span>
-                                <?php endif; ?>
-                            </td>
+    <?php if ($tieneEvidencia): ?>
+        <a href="/<?= $evidenciaLink ?>" class="evidencia-link" target="_blank"><?= $evidenciaNombre ?></a>
+        <span style="font-size:0.6rem; color:#888; display:block;">Subido: <?= date('d/m/Y', strtotime($reg['fecha_entrega'] ?? 'now')) ?></span>
+    <?php else: ?>
+        <span style="color:#999;">
+            Sin archivo
+            <?php if (!empty($reg['fecha_entrega'])): ?>
+                <span style="font-size:0.6rem; color:#888; display:block;">Fecha de entrega: <?= date('d/m/Y', strtotime($reg['fecha_entrega'])) ?></span>
+            <?php endif; ?>
+        </span>
+    <?php endif; ?>
+</td>
                             <td>
                                 <div class="acciones-botones">
                                     <?php if ($reg['tipo_entregable_id'] == 1): ?>
@@ -389,26 +390,35 @@
                                         </a>
                                         
                                         <?php if ($estado == 'pendiente' || $estado == 'elaboracion'): ?>
-                                            <a href="/Dir_bienestar/evento_ppt/generar?id_registro=<?= $reg['id'] ?>" class="btn-accion primary" title="Generar plantilla">
-                                                <span class="material-symbols-outlined">description</span>
-                                            </a>
+                                            <!-- Subir evidencia (primera entrega) -->
                                             <button class="btn-accion success" 
                                                     onclick="abrirModalSubida(<?= $reg['id'] ?>, '<?= $estado ?>', '<?= $fechaFin ?>')" 
                                                     title="Subir evidencia">
                                                 <span class="material-symbols-outlined">upload_file</span>
                                             </button>
                                         <?php elseif ($estado == 'entregado'): ?>
-                                            <a href="#" class="btn-accion" title="Ver entrega">
+                                            <!-- Ver entrega: enlace a la vista de carpeta -->
+                                            <a href="/Dir_bienestar/eventos/ver_carpeta?id_registro=<?= $reg['id'] ?>" 
+                                               class="btn-accion" title="Ver entrega">
                                                 <span class="material-symbols-outlined">visibility</span>
                                             </a>
-                                            <a href="#" class="btn-accion" title="Historial">
-                                                <span class="material-symbols-outlined">history</span>
-                                            </a>
+                                            <!-- Historial -->
+                                            <?php if ($carpetaId): ?>
+                                                <a href="/Dir_bienestar/eventos/historial/<?= $carpetaId ?>" 
+                                                   class="btn-accion" title="Historial">
+                                                    <span class="material-symbols-outlined">history</span>
+                                                </a>
+                                            <?php endif; ?>
                                         <?php elseif ($estado == 'revisado'): ?>
-                                            <a href="#" class="btn-accion warning" title="Ver observaciones">
+                                            <!-- Ver comentarios -->
+                                            <a href="/Dir_bienestar/eventos/comentarios?id_registro=<?= $reg['id'] ?>" 
+                                               class="btn-accion warning" title="Ver comentarios">
                                                 <span class="material-symbols-outlined">comment</span>
                                             </a>
-                                            <button class="btn-accion success" onclick="abrirModalSubida(<?= $reg['id'] ?>, '<?= $estado ?>', '<?= $fechaFin ?>')" title="Subir nueva versión">
+                                            <!-- Subir nueva versión (correcciones) -->
+                                            <button class="btn-accion success" 
+                                                    onclick="abrirModalSubida(<?= $reg['id'] ?>, '<?= $estado ?>', '<?= $fechaFin ?>')" 
+                                                    title="Subir nueva versión">
                                                 <span class="material-symbols-outlined">upload_file</span>
                                             </button>
                                         <?php elseif ($estado == 'aprobado'): ?>
@@ -419,11 +429,16 @@
                                                 <span class="material-symbols-outlined">download</span>
                                             </a>
                                         <?php elseif ($estado == 'fuera_tiempo'): ?>
-                                            <button class="btn-accion danger" onclick="abrirModalSubida(<?= $reg['id'] ?>, '<?= $estado ?>', '<?= $fechaFin ?>')" title="Subir evidencia (fuera de tiempo)">
-                                                <span class="material-symbols-outlined">upload_file</span>
+                                            <!-- Subir justificación (solo texto) -->
+                                            <button class="btn-accion danger" 
+                                                    onclick="abrirModalSubida(<?= $reg['id'] ?>, '<?= $estado ?>', '<?= $fechaFin ?>')" 
+                                                    title="Justificar fuera de tiempo">
+                                                <span class="material-symbols-outlined">edit_note</span>
                                             </button>
                                         <?php elseif ($estado == 'justificado'): ?>
-                                            <button class="btn-accion success" onclick="abrirModalSubida(<?= $reg['id'] ?>, '<?= $estado ?>', '<?= $fechaFin ?>')" title="Subir evidencia (justificación aprobada)">
+                                            <button class="btn-accion success" 
+                                                    onclick="abrirModalSubida(<?= $reg['id'] ?>, '<?= $estado ?>', '<?= $fechaFin ?>')" 
+                                                    title="Subir evidencia (justificación aprobada)">
                                                 <span class="material-symbols-outlined">upload_file</span>
                                             </button>
                                         <?php endif; ?>
@@ -443,7 +458,7 @@
 </div>
 
 <!-- ======================================== -->
-<!-- MODAL DE SUBIDA DE EVIDENCIA / JUSTIFICACIÓN -->
+<!-- MODAL DE SUBIDA DE EVIDENCIA / JUSTIFICACIÓN / NUEVA VERSIÓN -->
 <!-- ======================================== -->
 <div class="modal-overlay" id="modalSubida">
     <div class="modal-container">
@@ -456,13 +471,13 @@
             <input type="hidden" name="estado_actual" id="subidaEstadoActual">
             <input type="hidden" name="fecha_fin" id="subidaFechaFin">
             
-            <!-- Campo archivo (siempre visible y obligatorio) -->
+            <!-- Campo archivo (visible cuando se requiere subir archivo) -->
             <div class="form-group" id="archivoGroup">
                 <label>Archivo *</label>
-                <input type="file" name="archivo" accept=".pdf,.doc,.docx,.pptx" required>
+                <input type="file" name="archivo" accept=".pdf,.doc,.docx,.pptx">
             </div>
             
-            <!-- Campo justificación (visible solo si fuera de tiempo) -->
+            <!-- Campo justificación (visible solo cuando se requiere justificar) -->
             <div class="form-group" id="justificacionGroup" style="display:none;">
                 <label>Justificación (fuera de tiempo) *</label>
                 <textarea name="justificacion" rows="3" placeholder="Explique por qué la entrega se realiza después del plazo..."></textarea>
@@ -480,7 +495,7 @@
 
 <script>
 // ============================================================
-// MODAL DE SUBIDA (SIEMPRE REQUIERE ARCHIVO)
+// MODAL DE SUBIDA (CONDICIONAL: ARCHIVO O JUSTIFICACIÓN)
 // ============================================================
 function abrirModalSubida(registroId, estadoActual, fechaFin) {
     document.getElementById('subidaRegistroId').value = registroId;
@@ -491,35 +506,59 @@ function abrirModalSubida(registroId, estadoActual, fechaFin) {
     document.getElementById('mensajeSubida').style.display = 'none';
     
     const archivoGroup = document.getElementById('archivoGroup');
-    const justificacionGroup = document.getElementById('justificacionGroup');
-    const modalTitle = document.getElementById('modalSubidaTitle');
     const archivoInput = archivoGroup.querySelector('input');
+    const justificacionGroup = document.getElementById('justificacionGroup');
     const justificacionInput = justificacionGroup.querySelector('textarea');
+    const modalTitle = document.getElementById('modalSubidaTitle');
     
-    // Siempre mostrar archivo y hacerlo obligatorio
-    archivoGroup.style.display = 'block';
-    archivoInput.required = true;
-    
+    // Calcular si está fuera de tiempo
     const hoy = new Date();
     const fin = new Date(fechaFin);
     const diffTime = Math.abs(hoy - fin);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const esFueraTiempo = (diffDays > 3 && hoy > fin);
 
-    // Mostrar justificación solo si está fuera de tiempo
-    if (estadoActual === 'fuera_tiempo' || (estadoActual !== 'justificado' && esFueraTiempo)) {
+    // Decidir qué mostrar según el estado
+    // Caso 1: Fuera de tiempo (estado = 'fuera_tiempo' o fecha de entrega > fecha_fin)
+    if (estadoActual === 'fuera_tiempo' || (estadoActual !== 'justificado' && estadoActual !== 'entregado' && esFueraTiempo)) {
+        // Solo justificación, SIN archivo
+        archivoGroup.style.display = 'none';
+        archivoInput.required = false;
         justificacionGroup.style.display = 'block';
         justificacionInput.required = true;
-        modalTitle.textContent = '📤 Subir evidencia (fuera de tiempo)';
-    } else {
+        modalTitle.textContent = '📝 Justificar entrega fuera de tiempo';
+    } 
+    // Caso 2: Justificado (ya se aprobó la justificación)
+    else if (estadoActual === 'justificado') {
+        archivoGroup.style.display = 'block';
+        archivoInput.required = true;
         justificacionGroup.style.display = 'none';
         justificacionInput.required = false;
-        justificacionInput.value = '';
-        if (estadoActual === 'justificado') {
-            modalTitle.textContent = '📤 Subir evidencia (justificación aprobada)';
-        } else {
-            modalTitle.textContent = '📤 Subir evidencia';
-        }
+        modalTitle.textContent = '📤 Subir evidencia (justificación aprobada)';
+    }
+    // Caso 3: Revisado (subir nueva versión con correcciones)
+    else if (estadoActual === 'revisado') {
+        archivoGroup.style.display = 'block';
+        archivoInput.required = true;
+        justificacionGroup.style.display = 'none';
+        justificacionInput.required = false;
+        modalTitle.textContent = '📤 Subir nueva versión (correcciones)';
+    }
+    // Caso 4: Entregado (subir nueva versión)
+    else if (estadoActual === 'entregado') {
+        archivoGroup.style.display = 'block';
+        archivoInput.required = true;
+        justificacionGroup.style.display = 'none';
+        justificacionInput.required = false;
+        modalTitle.textContent = '📤 Subir nueva versión';
+    }
+    // Caso 5: Normal (pendiente, elaboracion, etc.)
+    else {
+        archivoGroup.style.display = 'block';
+        archivoInput.required = true;
+        justificacionGroup.style.display = 'none';
+        justificacionInput.required = false;
+        modalTitle.textContent = '📤 Subir evidencia';
     }
 
     document.getElementById('modalSubida').classList.add('activo');
@@ -535,7 +574,7 @@ document.getElementById('modalSubida').addEventListener('click', function(e) {
 });
 
 // ============================================================
-// ENVÍO DEL FORMULARIO (AJAX) - SIEMPRE REQUIERE ARCHIVO
+// ENVÍO DEL FORMULARIO (AJAX)
 // ============================================================
 document.getElementById('formSubida').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -544,22 +583,27 @@ document.getElementById('formSubida').addEventListener('submit', async function(
     mensaje.className = 'mensaje';
     mensaje.style.display = 'none';
 
-    // Validar archivo (siempre obligatorio)
+    // Validar según la visibilidad de los campos
     const archivo = formData.get('archivo');
-    if (!archivo || archivo.size === 0) {
-        mensaje.className = 'mensaje error';
-        mensaje.textContent = '❌ Debes seleccionar un archivo.';
-        mensaje.style.display = 'block';
-        return;
+    const justificacion = formData.get('justificacion')?.trim();
+
+    // Si el grupo archivo está visible, debe tener archivo
+    const archivoGroup = document.getElementById('archivoGroup');
+    if (archivoGroup.style.display !== 'none') {
+        if (!archivo || archivo.size === 0) {
+            mensaje.className = 'mensaje error';
+            mensaje.textContent = '❌ Debes seleccionar un archivo.';
+            mensaje.style.display = 'block';
+            return;
+        }
     }
 
-    // Validar justificación solo si el campo está visible
+    // Si el grupo justificación está visible, debe tener texto
     const justificacionGroup = document.getElementById('justificacionGroup');
     if (justificacionGroup.style.display !== 'none') {
-        const justificacion = formData.get('justificacion')?.trim();
         if (!justificacion) {
             mensaje.className = 'mensaje error';
-            mensaje.textContent = '❌ Debes escribir una justificación para la entrega fuera de tiempo.';
+            mensaje.textContent = '❌ Debes escribir una justificación.';
             mensaje.style.display = 'block';
             return;
         }

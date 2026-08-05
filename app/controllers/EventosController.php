@@ -57,7 +57,7 @@ class EventosController extends Controller
     }
 
     // ============================================================
-    // 2. EDICIÓN DE CARPETA
+    // 2. EDICIÓN DE CARPETA (CON COMUNICACIÓN SOCIAL)
     // ============================================================
     public function editar_carpeta()
     {
@@ -118,6 +118,7 @@ class EventosController extends Controller
                 'modulos_jornada'        => '[]',
                 'requerimientos_internos'=> '[]',
                 'requerimientos_externos'=> '[]',
+                'requerimientos_comunicacion'=> '[]',  // NUEVO
                 'comunicacion_social'    => '',
                 'delegacion_admin_resumen' => '',
                 'fecha_entrega'          => date('Y-m-d'),
@@ -128,6 +129,7 @@ class EventosController extends Controller
             $evento['modulos_jornada']      = json_decode($evento['modulos_jornada'] ?? '[]', true);
             $evento['requerimientos_internos'] = json_decode($evento['requerimientos_internos'] ?? '[]', true);
             $evento['requerimientos_externos'] = json_decode($evento['requerimientos_externos'] ?? '[]', true);
+            $evento['requerimientos_comunicacion'] = json_decode($evento['requerimientos_comunicacion'] ?? '[]', true); // NUEVO
             $evento['coordinacion_evento']  = $evento['coordinacion_evento'] ?? '';
             $evento['objetivo_evento']      = $evento['objetivo'] ?? '';
             $evento['maestra_ceremonias']   = $evento['maestra_ceremonias'] ?? '';
@@ -138,6 +140,7 @@ class EventosController extends Controller
         $modulosList   = $evento['modulos_jornada'] ?? [];
         $internos      = $evento['requerimientos_internos'] ?? [];
         $externos      = $evento['requerimientos_externos'] ?? [];
+        $comunicacion  = $evento['requerimientos_comunicacion'] ?? []; // NUEVO
 
         $ordenModel = $this->model('OrdenDelDia');
         $ordenes = $ordenModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
@@ -156,6 +159,11 @@ class EventosController extends Controller
 
         $presidiumModel = $this->model('PresidiumAsistente');
         $presidium = $presidiumModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
+        usort($presidium, function($a, $b) {
+            $ordA = $a['orden'] ?? 0;
+            $ordB = $b['orden'] ?? 0;
+            return $ordA - $ordB;
+        });
 
         $tipoPresidiumModel = $this->model('TipoPresidium');
         $tiposPresidium = $tipoPresidiumModel->obtenerTodos();
@@ -174,6 +182,7 @@ class EventosController extends Controller
         $insumos = $inventarioModel->obtenerActivos();
         $insumosInternos = array_filter($insumos, function($i) { return $i['tipo'] == 'Interno'; });
         $insumosExternos = array_filter($insumos, function($i) { return $i['tipo'] == 'Externo'; });
+        $insumosComunicacion = array_filter($insumos, function($i) { return $i['tipo'] == 'Comunicacion'; }); // NUEVO
 
         $unidadJefeModel = $this->model('UnidadJefe');
         $jefe = $unidadJefeModel->obtenerJefeActual($registro['unidad_administrativa_id']);
@@ -215,10 +224,12 @@ class EventosController extends Controller
             'modulosList'             => $modulosList,
             'internos'                => $internos,
             'externos'                => $externos,
+            'comunicacion'            => $comunicacion, // NUEVO
             'tiposPresidium'          => $tiposPresidium,
             'tipoPresidiumSeleccionado' => $tipoPresidiumSeleccionado,
             'insumosInternos'         => $insumosInternos,
             'insumosExternos'         => $insumosExternos,
+            'insumosComunicacion'     => $insumosComunicacion, // NUEVO
             'responsableEvento'       => $responsableEvento,
             'usuario'                 => $usuarioModel->obtenerPorId($_SESSION['usuario_id']),
             'usuarios'                => $usuarios,
@@ -228,7 +239,7 @@ class EventosController extends Controller
     }
 
     // ============================================================
-    // 3. GUARDAR CARPETA
+    // 3. GUARDAR CARPETA (CON COMUNICACIÓN SOCIAL)
     // ============================================================
     public function guardar_carpeta()
     {
@@ -384,6 +395,7 @@ class EventosController extends Controller
             'modulos_jornada'        => json_encode($data['modulos_jornada'] ?? []),
             'requerimientos_internos'=> json_encode($data['req_internos'] ?? []),
             'requerimientos_externos'=> json_encode($data['req_externos'] ?? []),
+            'requerimientos_comunicacion' => json_encode($data['req_comunicacion'] ?? []), // NUEVO
             'comunicacion_social'    => $data['comunicacion_social'] ?? '',
             'delegacion_admin_resumen' => $data['delegacion_admin_resumen'] ?? '',
             'fecha_entrega'          => $data['fecha_entrega'] ?? date('Y-m-d'),
@@ -430,18 +442,30 @@ class EventosController extends Controller
         }
         $ordenModel->guardarMultiple($eventoId, $ordenes);
 
-        // Guardar presídium (solo con nombre)
-        $presidiumList = [];
+        // ============================================================
+        // GUARDAR PRESÍDIUM (VERSIÓN ROBUSTA)
+        // ============================================================
+        $numSpots = (int)($data['num_spots'] ?? 5);
+        $receivedSpots = [];
         if (isset($data['presidium']) && is_array($data['presidium'])) {
             foreach ($data['presidium'] as $p) {
-                if ($p['orden'] !== '*' && !empty($p['nombre'])) {
-                    $presidiumList[] = [
-                        'tipo_presidium_id' => $tipoPresidiumId,
-                        'nombre_invitado'   => $p['nombre'],
-                        'cargo_invitado'    => $p['cargo'] ?? ''
+                $orden = (int)$p['orden'];
+                if ($orden > 0) {
+                    $receivedSpots[$orden] = [
+                        'nombre' => $p['nombre'] ?? '',
+                        'cargo'  => $p['cargo'] ?? ''
                     ];
                 }
             }
+        }
+        $presidiumList = [];
+        for ($i = 1; $i <= $numSpots; $i++) {
+            $presidiumList[] = [
+                'tipo_presidium_id' => $tipoPresidiumId,
+                'nombre_invitado'   => $receivedSpots[$i]['nombre'] ?? '',
+                'cargo_invitado'    => $receivedSpots[$i]['cargo'] ?? '',
+                'orden'             => $i
+            ];
         }
         $presidiumModel->guardarMultiple($eventoId, $presidiumList);
 
@@ -463,61 +487,83 @@ class EventosController extends Controller
         ]);
     }
 
-    // ============================================================
-    // 4. REVISIÓN DE CARPETAS
-    // ============================================================
-    public function revision()
-    {
-        $usuarioModel = $this->model('Usuario');
-        $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
-        $unidadId = $usuario['unidad_administrativa_id'] ?? null;
-        
-        $carpetaModel = $this->model('Carpeta');
-        $carpetas = $carpetaModel->obtenerPendientesRevision($unidadId);
-        
-        $this->view('eventos/revision', [
-            'carpetas' => $carpetas,
-            'usuario'  => $usuario
-        ]);
+ public function revision()
+{
+    $usuarioModel = $this->model('Usuario');
+    $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
+    $unidadId = $usuario['unidad_administrativa_id'] ?? null;
+    
+    $carpetaModel = $this->model('Carpeta');
+    // Obtener carpetas con estado 'entregado' o 'revisado' (pendientes de revisión)
+    $carpetas = $carpetaModel->obtenerPendientesRevision($unidadId);
+    
+    $this->view('eventos/revision', [
+        'carpetas' => $carpetas,
+        'usuario'  => $usuario
+    ]);
+}
+
+   // ============================================================
+// 5. VER DETALLE DE CARPETA (RECIBE id_registro)
+// ============================================================
+public function ver_carpeta($id = null)
+{
+    if ($id === null) {
+        $id = $_GET['id_registro'] ?? null;
+    }
+    if (!$id) {
+        die('ID de registro no especificado');
     }
 
-    // ============================================================
-    // 5. VER DETALLE DE CARPETA
-    // ============================================================
-    public function ver_carpeta($id = null)
-    {
-        if ($id === null) {
-            $id = $_GET['id_registro'] ?? null;
-        }
-        if (!$id) {
-            die('ID de carpeta no especificado');
-        }
-        
-        $carpetaModel = $this->model('Carpeta');
-        $carpeta = $carpetaModel->obtenerConTodo($id);
-        if (!$carpeta) {
-            die('Carpeta no encontrada');
-        }
-        
-        $usuarioModel = $this->model('Usuario');
-        $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
-        $rolId = $usuario['rol_id'];
-        $esAdmin = ($rolId == 1);
-        $esJefe = ($rolId == 2 || $rolId == 5);
-        
-        if (!$esAdmin && !$esJefe) {
-            die('No tienes permiso para ver esta carpeta');
-        }
-        
-        if ($esJefe && $usuario['unidad_administrativa_id'] != $carpeta['unidad_administrativa_id']) {
-            die('No tienes permiso para ver esta carpeta');
-        }
-        
-        $this->view('eventos/revision_detalle', [
-            'carpeta' => $carpeta,
-            'usuario' => $usuario
-        ]);
+    // Obtener el registro de actividad
+    $registroModel = $this->model('RegistroActividad');
+    $registro = $registroModel->obtenerRegistroCompletoPorId($id);
+    if (!$registro) {
+        die('Registro no encontrado');
     }
+
+    // Obtener la carpeta asociada a ese registro
+    $carpetaModel = $this->model('Carpeta');
+    $carpeta = $carpetaModel->obtenerPorRegistroActividadId($id);
+    if (!$carpeta) {
+        die('Carpeta no encontrada para este registro');
+    }
+
+    // Obtener evento_detalle
+    $eventoModel = $this->model('EventoDetalle');
+    $evento = $eventoModel->obtenerPorCarpetaIdCompleto($carpeta['id'] ?? null);
+
+    // Obtener orden del día y presídium
+    $ordenModel = $this->model('OrdenDelDia');
+    $ordenes = $ordenModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
+
+    $presidiumModel = $this->model('PresidiumAsistente');
+    $presidium = $presidiumModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
+
+    // Invitados, módulos, requerimientos (desde JSON)
+    $invitados = [];
+    $modulos = [];
+    $internos = [];
+    $externos = [];
+    if ($evento) {
+        $invitados = json_decode($evento['invitados_especiales'] ?? '[]', true);
+        $modulos = json_decode($evento['modulos_jornada'] ?? '[]', true);
+        $internos = json_decode($evento['requerimientos_internos'] ?? '[]', true);
+        $externos = json_decode($evento['requerimientos_externos'] ?? '[]', true);
+    }
+
+    $this->view('eventos/ver_carpeta', [
+        'registro'  => $registro,
+        'carpeta'   => $carpeta,
+        'evento'    => $evento,
+        'ordenes'   => $ordenes,
+        'presidium' => $presidium,
+        'invitados' => $invitados,
+        'modulos'   => $modulos,
+        'internos'  => $internos,
+        'externos'  => $externos
+    ]);
+}
 
     // ============================================================
     // 6. SUBIR EVIDENCIA
@@ -863,10 +909,21 @@ class EventosController extends Controller
     // 12. OBTENER HISTORIAL (JSON)
     // ============================================================
     public function historial($carpetaId)
-    {
+{
+    $historialModel = $this->model('HistorialCarpeta');
+    $registros = $historialModel->obtenerPorCarpeta($carpetaId);
+    
+    // Si es una petición AJAX, devolver JSON
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
         header('Content-Type: application/json');
-        $historialModel = $this->model('HistorialCarpeta');
-        $registros = $historialModel->obtenerPorCarpeta($carpetaId);
         echo json_encode($registros);
+        exit;
     }
+    
+    // Si es una petición normal, mostrar la vista
+    $this->view('eventos/historial', [
+        'historial' => $registros
+    ]);
+}
 }
