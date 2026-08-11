@@ -1,5 +1,8 @@
 <?php
 
+// Incluir el helper de permisos
+require_once APPROOT . '/helpers/PermissionHelper.php';
+
 class ActividadController extends Controller
 {
     public function __construct()
@@ -30,7 +33,7 @@ class ActividadController extends Controller
         }
 
         // ============================================================
-        // FORZAR UNIDAD DEL USUARIO SI ES PERSONAL (rol=3)
+        // OBTENER USUARIO Y CONEXIÓN
         // ============================================================
         $usuarioModel = $this->model('Usuario');
         $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
@@ -40,17 +43,33 @@ class ActividadController extends Controller
             return;
         }
 
-        // Si el usuario es Personal (rol=3), forzar su unidad
+        // Obtener conexión PDO desde el modelo (debe tener método getDb)
+        $db = $usuarioModel->getDb();
+
+        // ============================================================
+        // VALIDAR PERMISOS DE UNIDAD
+        // ============================================================
+        $unidadesPermitidas = PermissionHelper::getUnidadesAccesibles($db, $usuario);
+        if ($unidadesPermitidas !== null) {
+            // Si el usuario no es admin/coordinador, validar que la unidad seleccionada esté permitida
+            $unidadSeleccionada = isset($data['unidad_administrativa_id']) ? (int)$data['unidad_administrativa_id'] : 0;
+            if (!in_array($unidadSeleccionada, $unidadesPermitidas)) {
+                echo json_encode(['success' => false, 'error' => 'No tiene permiso para seleccionar esa unidad.']);
+                return;
+            }
+        }
+
+        // Si es Personal (rol=3), forzar su unidad
         if ($usuario['rol_id'] == 3) {
             $data['unidad_administrativa_id'] = $usuario['unidad_administrativa_id'];
         } 
-        // Si es Admin, Jefe o Coordinador y no envió unidad, usar la suya
+        // Si es Admin, Jefe o Coordinador y no envió unidad, usar la suya (opcional)
         elseif (empty($data['unidad_administrativa_id']) && in_array($usuario['rol_id'], [1, 2, 5])) {
             $data['unidad_administrativa_id'] = $usuario['unidad_administrativa_id'];
         }
 
         // ============================================================
-        // VALIDACIONES
+        // VALIDACIONES DE CAMPOS OBLIGATORIOS
         // ============================================================
         $required = [
             'unidad_administrativa_id', 'actividad_programada_id', 'unidad_medida_id',
@@ -184,12 +203,30 @@ class ActividadController extends Controller
 
     /**
      * Muestra las actividades programadas de la unidad del usuario
+     * con filtros de permisos.
      */
     public function misActividades()
     {
-        $unidadId = $_SESSION['usuario_unidad_id'] ?? 0;
-        $actividadModel = $this->model('ActividadProgramada');
-        $actividades = $actividadModel->obtenerPorUnidad($unidadId);
-        $this->view('actividades/mis_actividades', ['actividades' => $actividades]);
+        $usuarioModel = $this->model('Usuario');
+        $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
+        if (!$usuario) {
+            die('Usuario no encontrado');
+        }
+
+        // Obtener conexión para el helper (aunque no se usa directamente aquí,
+        // se pasa al modelo RegistroActividad que a su vez usa el helper)
+        $db = $usuarioModel->getDb();
+
+        // Obtener actividades con filtros y permisos
+        $filtros = []; // Se pueden agregar filtros adicionales si se desea
+        $registroModel = $this->model('RegistroActividad');
+        $actividades = $registroModel->obtenerConFiltros($filtros, $usuario);
+
+        // Transformar datos para la vista (agregar estado, conteo de evidencias, etc.)
+        // Por ahora, pasar directamente
+        $this->view('actividades/mis_actividades', [
+            'actividades' => $actividades,
+            'usuario' => $usuario
+        ]);
     }
 }

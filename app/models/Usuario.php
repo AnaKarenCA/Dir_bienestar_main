@@ -260,4 +260,29 @@ class Usuario extends Model
         $stmt = $this->db->query($sql);
         return $stmt->execute([$hash, $id]);
     }
+/**
+ * Obtiene las unidades administrativas accesibles para este usuario.
+ *
+ * @param int|null $id Si no se pasa, usa el ID del usuario actual.
+ * @return array|null
+ */
+public function obtenerUnidadesAccesibles($id = null)
+{
+    if ($id === null) {
+        $id = $this->id ?? 0;
+    }
+    $usuario = $this->obtenerPorId($id);
+    if (!$usuario) return [];
+    // Necesitamos la conexión. La obtenemos de la propiedad $this->db del modelo.
+    // Como estamos en el modelo Usuario, podemos usar $this->db.
+    return PermissionHelper::getUnidadesAccesibles($this->db, $usuario);
+}
+/**
+ * Devuelve la conexión a la base de datos.
+ * @return Database
+ */
+public function getDb()
+{
+    return $this->db;
+}
 }

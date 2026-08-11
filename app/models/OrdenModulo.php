@@ -7,7 +7,11 @@ class OrdenModulo extends Model
      */
     public function obtenerPorEventoDetalleId($eventoDetalleId)
     {
-        $sql = "SELECT * FROM orden_modulo WHERE evento_detalle_id = ? ORDER BY id";
+        $sql = "SELECT om.*
+                FROM orden_modulo om
+                INNER JOIN orden_del_dia odd ON odd.id = om.orden_del_dia_id
+                WHERE odd.evento_detalle_id = ?
+                ORDER BY om.id";
         $stmt = $this->db->query($sql);
         $stmt->execute([$eventoDetalleId]);
         return $stmt->fetchAll();

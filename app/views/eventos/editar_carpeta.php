@@ -200,7 +200,7 @@
                     <div class="file-input-wrapper" id="bg-wrapper">
                         <span style="display:block; margin-bottom:6px;">Seleccionar diseño del evento...</span>
                         <span class="file-label" onclick="document.getElementById('bg-file').click()">Seleccionar archivo</span>
-                        <input type="file" id="bg-file" name="imagen_fondo" accept="image/*" style="display:none;">
+                        <input type="file" id="bg-file" name="imagen_fondo" accept="image/png,image/jpeg,image/gif" style="display:none;">
                         <?php if (!empty($evento['imagen_fondo'])): ?>
                             <div style="margin-top:6px;"><img src="<?= htmlspecialchars($evento['imagen_fondo']) ?>" style="max-height:60px; border-radius:4px;"></div>
                             <input type="hidden" name="imagen_fondo_actual" value="<?= htmlspecialchars($evento['imagen_fondo']) ?>">

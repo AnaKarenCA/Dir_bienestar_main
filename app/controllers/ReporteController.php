@@ -1,5 +1,8 @@
 <?php
 
+// Incluir el helper de permisos
+require_once APPROOT . '/helpers/PermissionHelper.php';
+
 class ReporteController extends Controller
 {
     public function __construct()
@@ -10,11 +13,36 @@ class ReporteController extends Controller
         }
     }
 
+    /**
+     * Vista principal de reportes.
+     * Muestra solo las unidades administrativas a las que el usuario tiene acceso.
+     */
     public function index()
     {
-        // Cargar unidades para el filtro
+        // Obtener usuario
+        $usuarioModel = $this->model('Usuario');
+        $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
+        if (!$usuario) {
+            // Redirigir o mostrar error
+            die('Usuario no encontrado');
+        }
+
+        // Obtener conexión a la base de datos desde el modelo Usuario
+        $db = $usuarioModel->getDb();
+
+        // Obtener unidades accesibles
+        $unidadesPermitidas = PermissionHelper::getUnidadesAccesibles($db, $usuario);
+
         $unidadModel = $this->model('UnidadAdministrativa');
-        $unidades = $unidadModel->obtenerTodas();
+        if ($unidadesPermitidas === null) {
+            // Admin o Coordinador: ven todas las unidades
+            $unidades = $unidadModel->obtenerTodas();
+        } else {
+            // Personal o Jefe: solo las unidades permitidas
+            $unidades = empty($unidadesPermitidas) 
+                ? [] 
+                : $unidadModel->obtenerPorIds($unidadesPermitidas);
+        }
 
         $this->view('reportes/index', [
             'unidades' => $unidades
@@ -22,7 +50,8 @@ class ReporteController extends Controller
     }
 
     /**
-     * Endpoint AJAX para obtener datos del reporte
+     * Endpoint AJAX para obtener los datos del reporte.
+     * Aplica filtros de permisos según el rol del usuario.
      */
     public function data()
     {
@@ -33,13 +62,48 @@ class ReporteController extends Controller
         $periodoValor = $_GET['periodo_valor'] ?? date('n');
         $unidadId = $_GET['unidad_id'] ?? null;
 
-        // Si no hay unidad seleccionada, devolver vacío
-        if (!$unidadId) {
-            echo json_encode([]);
+        // Obtener el usuario actual
+        $usuarioModel = $this->model('Usuario');
+        $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
+        if (!$usuario) {
+            echo json_encode(['error' => 'Usuario no encontrado']);
             return;
         }
 
-        // Obtener actividades de la unidad
+        // Obtener conexión a la base de datos
+        $db = $usuarioModel->getDb();
+
+        // Obtener unidades accesibles usando el helper
+        $unidadesPermitidas = PermissionHelper::getUnidadesAccesibles($db, $usuario);
+
+        // ============================================================
+        // APLICAR FILTROS DE PERMISOS
+        // ============================================================
+        if ($unidadesPermitidas === null) {
+            // Admin (rol=1) o Coordinador (rol=5): acceso total
+            if (!$unidadId) {
+                echo json_encode([]);
+                return;
+            }
+            // Cualquier unidad es válida para admin/coordinador
+        } else {
+            // Personal (rol=3) o Jefe (rol=2): solo unidades permitidas
+            if (!$unidadId || !in_array((int)$unidadId, $unidadesPermitidas)) {
+                echo json_encode([]);
+                return;
+            }
+            // Si es Personal (rol=3), además debe ser su propia unidad
+            if ($usuario['rol_id'] == 3) {
+                if ((int)$unidadId != (int)$usuario['unidad_administrativa_id']) {
+                    echo json_encode([]);
+                    return;
+                }
+            }
+        }
+
+        // ============================================================
+        // OBTENER ACTIVIDADES DE LA UNIDAD SELECCIONADA
+        // ============================================================
         $actividadModel = $this->model('ActividadProgramada');
         $actividades = $actividadModel->obtenerPorUnidad($unidadId);
         if (empty($actividades)) {
@@ -47,7 +111,7 @@ class ReporteController extends Controller
             return;
         }
 
-        // Calcular rango de fechas según período
+        // Calcular rango de fechas según el período
         $fechas = $this->calcularRangoFechas($anio, $periodoTipo, $periodoValor);
         $fechaInicio = $fechas['inicio'];
         $fechaFin = $fechas['fin'];
@@ -66,11 +130,11 @@ class ReporteController extends Controller
 
             $resultado[] = [
                 'actividad_id' => $actividadId,
-                'actividad' => $act['descripcion'],
-                'meta' => $meta,
-                'registrado' => $registrado,
-                'diferencia' => $diferencia,
-                'avance' => $avance
+                'actividad'    => $act['descripcion'],
+                'meta'         => $meta,
+                'registrado'   => $registrado,
+                'diferencia'   => $diferencia,
+                'avance'       => $avance
             ];
         }
 
@@ -78,7 +142,12 @@ class ReporteController extends Controller
     }
 
     /**
-     * Calcula fecha inicio y fin según el período
+     * Calcula fecha de inicio y fin según el tipo de período.
+     *
+     * @param int    $anio
+     * @param string $periodoTipo  mensual|trimestral|semestral|anual
+     * @param int    $periodoValor 1-12 para mensual, 1-4 para trimestral, 1-2 para semestral, 1 para anual
+     * @return array ['inicio' => 'YYYY-MM-DD', 'fin' => 'YYYY-MM-DD']
      */
     private function calcularRangoFechas($anio, $periodoTipo, $periodoValor)
     {
@@ -86,14 +155,17 @@ class ReporteController extends Controller
         $fin = null;
 
         if ($periodoTipo === 'mensual') {
-            $inicio = "$anio-" . str_pad($periodoValor, 2, '0', STR_PAD_LEFT) . "-01";
+            $mes = (int)$periodoValor;
+            $inicio = "$anio-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
             $fin = date("Y-m-t", strtotime($inicio));
         } elseif ($periodoTipo === 'trimestral') {
-            $mesInicio = ($periodoValor - 1) * 3 + 1;
+            $trimestre = (int)$periodoValor;
+            $mesInicio = ($trimestre - 1) * 3 + 1;
             $inicio = "$anio-" . str_pad($mesInicio, 2, '0', STR_PAD_LEFT) . "-01";
             $fin = date("Y-m-t", strtotime("$anio-" . str_pad($mesInicio + 2, 2, '0', STR_PAD_LEFT) . "-01"));
         } elseif ($periodoTipo === 'semestral') {
-            $mesInicio = ($periodoValor - 1) * 6 + 1;
+            $semestre = (int)$periodoValor;
+            $mesInicio = ($semestre - 1) * 6 + 1;
             $inicio = "$anio-" . str_pad($mesInicio, 2, '0', STR_PAD_LEFT) . "-01";
             $fin = date("Y-m-t", strtotime("$anio-" . str_pad($mesInicio + 5, 2, '0', STR_PAD_LEFT) . "-01"));
         } elseif ($periodoTipo === 'anual') {

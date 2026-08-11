@@ -3,150 +3,160 @@
 class Carpeta extends Model
 {
     /**
-     * Obtiene una carpeta a partir del ID de evento_detalle
+     * Obtiene una carpeta por su ID.
      */
-    public function obtenerPorEventoDetalleId($eventoDetalleId)
+    public function obtenerPorId($id)
     {
-        $sql = "SELECT c.* FROM carpeta c
-                JOIN evento_detalle ed ON ed.carpeta_id = c.id
-                WHERE ed.id = ?";
+        $sql = "SELECT * FROM carpeta WHERE id = ?";
         $stmt = $this->db->query($sql);
-        $stmt->execute([$eventoDetalleId]);
+        $stmt->execute([$id]);
         return $stmt->fetch();
     }
 
     /**
-     * Obtiene una carpeta a partir del ID de registro_actividad
+     * Obtiene la carpeta asociada a un registro de actividad.
      */
-    public function obtenerPorRegistroActividadId($registroActividadId)
+    public function obtenerPorRegistroActividadId($registroId)
     {
         $sql = "SELECT * FROM carpeta WHERE registro_actividad_id = ?";
         $stmt = $this->db->query($sql);
-        $stmt->execute([$registroActividadId]);
+        $stmt->execute([$registroId]);
         return $stmt->fetch();
     }
 
     /**
-     * Guarda (inserta o actualiza) una carpeta
+     * Obtiene datos completos de una carpeta junto con el registro y relaciones.
+     */
+    public function obtenerConDatosCompletos($registroId)
+    {
+        $sql = "
+            SELECT 
+                c.*,
+                ra.id AS registro_id,
+                ra.fecha_inicio,
+                ra.fecha_fin,
+                ra.hora_inicio,
+                ra.hora_fin,
+                ra.descripcion AS registro_descripcion,
+                ra.beneficiarios_asistentes,
+                u.nombre AS realizo_nombre,
+                u.puesto AS realizo_puesto,
+                ua.nombre AS unidad_nombre,
+                ua.objetivo AS unidad_objetivo,
+                ap.descripcion AS actividad_desc,
+                l.nombre AS lugar_nombre,
+                te.nombre_entregable,
+                dom.calle,
+                dom.numero_exterior,
+                dom.numero_interior,
+                cp.cp AS codigo_postal,
+                d.nombre AS delegacion_nombre,
+                sd.nombre AS subdelegacion_nombre
+            FROM carpeta c
+            INNER JOIN registro_actividad ra ON ra.id = c.registro_actividad_id
+            INNER JOIN usuario u ON u.id = c.realizo_id
+            INNER JOIN unidad_administrativa ua ON ua.id = ra.unidad_administrativa_id
+            LEFT JOIN actividad_programada ap ON ap.id = ra.actividad_programada_id
+            INNER JOIN lugar l ON l.id = ra.lugar_id
+            INNER JOIN tipo_entregable te ON te.id = ra.tipo_entregable_id
+            INNER JOIN domicilio dom ON dom.id = ra.domicilio_id
+            LEFT JOIN codigo_postal cp ON cp.id = dom.codigo_postal_id
+            LEFT JOIN subdelegacion sd ON sd.id = cp.subdelegacion_id
+            LEFT JOIN delegacion d ON d.id = sd.delegacion_id
+            WHERE c.registro_actividad_id = ?
+            LIMIT 1
+        ";
+        $stmt = $this->db->query($sql);
+        $stmt->execute([$registroId]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Guarda (inserta o actualiza) una carpeta.
+     * - Si se pasa 'id', actualiza.
+     * - Si no se pasa 'id', pero existe carpeta para el registro, la actualiza.
+     * - Si no existe, inserta y devuelve el nuevo ID.
      */
     public function guardar($datos)
     {
-        if (isset($datos['id']) && $datos['id']) {
-            $sql = "UPDATE carpeta SET 
-                        logo_toluca = ?,
-                        direccion_entrega = ?,
-                        fecha_entrega = ?,
-                        link_mapa = ?,
-                        realizo_id = ?,
-                        autorizado_por_id = ?,
-                        firma = ?,
-                        estado = ?,
-                        justificacion_fuera_tiempo = ?
-                    WHERE id = ?";
+        // Si no se pasa 'id' pero existe una carpeta para este registro, la obtenemos
+        if (empty($datos['id']) && !empty($datos['registro_actividad_id'])) {
+            $existente = $this->obtenerPorRegistroActividadId($datos['registro_actividad_id']);
+            if ($existente) {
+                $datos['id'] = $existente['id'];
+            }
+        }
+
+        // Si ahora tenemos 'id', actualizamos
+        if (!empty($datos['id'])) {
+            $sql = "
+                UPDATE carpeta SET
+                    registro_actividad_id = ?,
+                    logo_toluca = ?,
+                    direccion_entrega = ?,
+                    link_mapa = ?,
+                    fecha_entrega = ?,
+                    realizo_id = ?,
+                    autorizado_por_id = ?,
+                    firma = ?,
+                    estado = ?,
+                    justificacion_fuera_tiempo = ?
+                WHERE id = ?
+            ";
             $stmt = $this->db->query($sql);
             $result = $stmt->execute([
-                $datos['logo_toluca'],
-                $datos['direccion_entrega'],
-                $datos['fecha_entrega'],
-                $datos['link_mapa'],
+                $datos['registro_actividad_id'],
+                $datos['logo_toluca'] ?? null,
+                $datos['direccion_entrega'] ?? null,
+                $datos['link_mapa'] ?? null,
+                $datos['fecha_entrega'] ?? date('Y-m-d'),
                 $datos['realizo_id'],
-                $datos['autorizado_por_id'],
-                $datos['firma'],
-                $datos['estado'],
-                $datos['justificacion_fuera_tiempo'],
+                $datos['autorizado_por_id'] ?? null,
+                $datos['firma'] ?? null,
+                $datos['estado'] ?? 'pendiente',
+                $datos['justificacion_fuera_tiempo'] ?? null,
                 $datos['id']
             ]);
             return $result ? $datos['id'] : false;
         } else {
-            $sql = "INSERT INTO carpeta (registro_actividad_id, logo_toluca, direccion_entrega, fecha_entrega, link_mapa, realizo_id, autorizado_por_id, firma, estado, justificacion_fuera_tiempo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            // Insertar nueva carpeta
+            $sql = "
+                INSERT INTO carpeta (
+                    registro_actividad_id,
+                    logo_toluca,
+                    direccion_entrega,
+                    link_mapa,
+                    fecha_entrega,
+                    realizo_id,
+                    autorizado_por_id,
+                    firma,
+                    estado,
+                    justificacion_fuera_tiempo
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ";
             $stmt = $this->db->query($sql);
             $result = $stmt->execute([
                 $datos['registro_actividad_id'],
-                $datos['logo_toluca'],
-                $datos['direccion_entrega'],
-                $datos['fecha_entrega'],
-                $datos['link_mapa'],
+                $datos['logo_toluca'] ?? null,
+                $datos['direccion_entrega'] ?? null,
+                $datos['link_mapa'] ?? null,
+                $datos['fecha_entrega'] ?? date('Y-m-d'),
                 $datos['realizo_id'],
-                $datos['autorizado_por_id'],
-                $datos['firma'],
-                $datos['estado'],
-                $datos['justificacion_fuera_tiempo']
+                $datos['autorizado_por_id'] ?? null,
+                $datos['firma'] ?? null,
+                $datos['estado'] ?? 'pendiente',
+                $datos['justificacion_fuera_tiempo'] ?? null
             ]);
             if ($result) {
-                return $this->db->getConnection()->lastInsertId();
+                // Obtener el último ID insertado (funciona con PDO)
+                return $this->db->lastInsertId();
             }
             return false;
         }
     }
 
     /**
-     * Obtiene las carpetas pendientes de revisión para una unidad (o todas si $unidadId es null)
-     * Incluye los estados: entregado, revisado, fuera_tiempo (si tiene justificación)
-     * 
-     * @param int|null $unidadId ID de la unidad administrativa (opcional)
-     * @return array Lista de carpetas pendientes de revisión
-     */
-    public function obtenerPendientesRevision($unidadId = null)
-    {
-        // Construir la consulta con las condiciones WHERE
-        $sql = "SELECT c.*, 
-                       ra.id as registro_id, 
-                       ra.fecha_inicio, 
-                       ra.fecha_fin,
-                       ra.hora_inicio,
-                       ra.hora_fin,
-                       u.nombre as usuario_nombre,
-                       ua.nombre as unidad_nombre,
-                       ua.id as unidad_administrativa_id
-                FROM carpeta c
-                JOIN registro_actividad ra ON ra.id = c.registro_actividad_id
-                JOIN usuario u ON u.id = c.realizo_id
-                JOIN unidad_administrativa ua ON ua.id = ra.unidad_administrativa_id
-                WHERE c.estado IN ('entregado', 'revisado')";
-        $params = [];
-
-        // Agregar filtro por unidad si se proporciona
-        if ($unidadId) {
-            $sql .= " AND ra.unidad_administrativa_id = ?";
-            $params[] = $unidadId;
-        }
-
-        // Ordenar al final
-        $sql .= " ORDER BY c.fecha_entrega DESC";
-
-        $stmt = $this->db->query($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
-    }
-
-    /**
-     * Obtiene una carpeta con datos completos (incluyendo nombres de quienes realizan y autorizan)
-     * a partir del ID de registro_actividad
-     */
-    public function obtenerConDatosCompletos($registroActividadId)
-    {
-        $sql = "SELECT c.*, ed.id AS evento_detalle_id
-                FROM carpeta c
-                LEFT JOIN evento_detalle ed ON ed.carpeta_id = c.id
-                WHERE c.registro_actividad_id = ?";
-        $stmt = $this->db->query($sql);
-        $stmt->execute([$registroActividadId]);
-        return $stmt->fetch();
-    }
-
-    /**
-     * Obtiene una carpeta por su ID
-     */
-    public function obtenerPorId($id)
-    {
-        $stmt = $this->db->query("SELECT * FROM carpeta WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch();
-    }
-
-    /**
-     * Actualiza únicamente el estado de una carpeta
+     * Actualiza solo el estado de la carpeta.
      */
     public function actualizarEstado($id, $estado)
     {
@@ -155,42 +165,107 @@ class Carpeta extends Model
         return $stmt->execute([$estado, $id]);
     }
 
-    /**
-     * Obtiene TODA la información de una carpeta, incluyendo datos del registro,
-     * unidad, actividad programada y evento_detalle.
-     * Útil para la vista de detalle (revisión).
-     * 
-     * IMPORTANTE: se incluye ua.id AS unidad_administrativa_id para validar permisos.
-     */
-    public function obtenerConTodo($id)
+    // ============================================================
+    // MÉTODOS PARA REVISIÓN
+    // ============================================================
+
+    public function obtenerPendientesRevision()
     {
-        $sql = "SELECT c.*, 
-                       u.nombre AS usuario_nombre,
-                       u.puesto AS usuario_puesto,
-                       ua.nombre AS unidad_nombre,
-                       ua.id AS unidad_administrativa_id,
-                       ap.descripcion AS actividad_desc,
-                       r.descripcion AS registro_descripcion,
-                       r.fecha_inicio,
-                       r.fecha_fin,
-                       r.hora_inicio,
-                       r.hora_fin,
-                       r.lugar_id,
-                       r.beneficiarios_asistentes,
-                       r.tipo_entregable_id,
-                       ed.nombre_evento,
-                       ed.fecha_evento,
-                       ed.objetivo,
-                       ed.justificacion
-                FROM carpeta c
-                JOIN registro_actividad r ON r.id = c.registro_actividad_id
-                JOIN usuario u ON u.id = r.usuario_id
-                LEFT JOIN unidad_administrativa ua ON ua.id = r.unidad_administrativa_id
-                LEFT JOIN actividad_programada ap ON ap.id = r.actividad_programada_id
-                LEFT JOIN evento_detalle ed ON ed.carpeta_id = c.id
-                WHERE c.id = ?";
+        $sql = "
+            SELECT 
+                c.*, 
+                ra.id AS registro_id, 
+                u.nombre AS usuario_nombre, 
+                ua.nombre AS unidad_nombre
+            FROM carpeta c
+            JOIN registro_actividad ra ON ra.id = c.registro_actividad_id
+            JOIN usuario u ON u.id = ra.usuario_id
+            JOIN unidad_administrativa ua ON ua.id = ra.unidad_administrativa_id
+            WHERE c.estado IN ('entregado', 'revisado')
+            ORDER BY c.fecha_entrega DESC
+        ";
         $stmt = $this->db->query($sql);
-        $stmt->execute([$id]);
-        return $stmt->fetch();
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function obtenerPendientesRevisionPorUnidades($unidadesIds)
+    {
+        if (empty($unidadesIds)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($unidadesIds), '?'));
+        $sql = "
+            SELECT 
+                c.*, 
+                ra.id AS registro_id, 
+                u.nombre AS usuario_nombre, 
+                ua.nombre AS unidad_nombre
+            FROM carpeta c
+            JOIN registro_actividad ra ON ra.id = c.registro_actividad_id
+            JOIN usuario u ON u.id = ra.usuario_id
+            JOIN unidad_administrativa ua ON ua.id = ra.unidad_administrativa_id
+            WHERE c.estado IN ('entregado', 'revisado')
+              AND ra.unidad_administrativa_id IN ($placeholders)
+            ORDER BY c.fecha_entrega DESC
+        ";
+        $stmt = $this->db->query($sql);
+        $stmt->execute($unidadesIds);
+        return $stmt->fetchAll();
+    }
+
+    // ============================================================
+    // MÉTODO PARA OBTENER FIRMAS (usado en PowerPoint)
+    // ============================================================
+
+    /**
+     * Obtiene las firmas necesarias para la carpeta.
+     * Devuelve el realizador (quien creó la carpeta) y los cargos fijos
+     * de Coordinador de Apoyo Técnico y Delegado Administrativo.
+     *
+     * @param int $carpetaId
+     * @return array
+     */
+    public function obtenerFirmasPorId($carpetaId)
+    {
+        // Obtener el usuario que realizó la carpeta
+        $sql = "
+            SELECT 
+                c.id,
+                u.nombre AS realizo_nombre,
+                u.puesto AS realizo_puesto
+            FROM carpeta c
+            JOIN usuario u ON u.id = c.realizo_id
+            WHERE c.id = ?
+        ";
+        $stmt = $this->db->query($sql);
+        $stmt->execute([$carpetaId]);
+        $result = $stmt->fetch();
+
+        // Nombres y cargos fijos (según la lógica del sistema)
+        $coordinador_nombre = 'Mtro. Omar Ruiz Castillo';
+        $coordinador_puesto = 'Coordinador de Apoyo Técnico';
+        $delegado_nombre = 'Lcdo. Marco Antonio Guadarrama López';
+        $delegado_puesto = 'Delegado Administrativo';
+
+        if (!$result) {
+            return [
+                'realizo_nombre'        => '',
+                'realizo_puesto'        => '',
+                'coordinador_nombre'    => $coordinador_nombre,
+                'coordinador_puesto'    => $coordinador_puesto,
+                'delegado_nombre'       => $delegado_nombre,
+                'delegado_puesto'       => $delegado_puesto
+            ];
+        }
+
+        return [
+            'realizo_nombre'        => $result['realizo_nombre'] ?? '',
+            'realizo_puesto'        => $result['realizo_puesto'] ?? '',
+            'coordinador_nombre'    => $coordinador_nombre,
+            'coordinador_puesto'    => $coordinador_puesto,
+            'delegado_nombre'       => $delegado_nombre,
+            'delegado_puesto'       => $delegado_puesto
+        ];
     }
 }

@@ -7,9 +7,27 @@ class OrdenRequerimiento extends Model
      */
     public function obtenerPorEventoDetalleIdYTipo($eventoDetalleId, $tipo)
     {
-        $sql = "SELECT * FROM orden_requerimiento WHERE evento_detalle_id = ? AND tipo = ? ORDER BY id";
+        $sql = "SELECT r.*, i.nombre_insumo, i.medida, i.unidad
+                FROM orden_requerimiento r
+                INNER JOIN orden_del_dia odd ON odd.id = r.orden_del_dia_id
+                LEFT JOIN inventario_insumo i ON i.id = r.inventario_insumo_id
+                WHERE odd.evento_detalle_id = ? AND r.tipo_requerimiento = ?
+                ORDER BY r.id";
         $stmt = $this->db->query($sql);
         $stmt->execute([$eventoDetalleId, $tipo]);
+        return $stmt->fetchAll();
+    }
+
+    public function obtenerPorEventoDetalleId($eventoDetalleId)
+    {
+        $sql = "SELECT r.*, i.nombre_insumo, i.medida, i.unidad
+                FROM orden_requerimiento r
+                INNER JOIN orden_del_dia odd ON odd.id = r.orden_del_dia_id
+                LEFT JOIN inventario_insumo i ON i.id = r.inventario_insumo_id
+                WHERE odd.evento_detalle_id = ?
+                ORDER BY r.tipo_requerimiento, r.id";
+        $stmt = $this->db->query($sql);
+        $stmt->execute([$eventoDetalleId]);
         return $stmt->fetchAll();
     }
 

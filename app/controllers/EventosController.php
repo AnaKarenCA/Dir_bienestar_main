@@ -1,4 +1,5 @@
 <?php
+require_once APPROOT . '/helpers/PermissionHelper.php';
 
 class EventosController extends Controller
 {
@@ -17,9 +18,8 @@ class EventosController extends Controller
     {
         $usuarioModel = $this->model('Usuario');
         $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
-        $unidadId = $usuario['unidad_administrativa_id'] ?? null;
         $rolId = $usuario['rol_id'] ?? null;
-        $esAdmin = ($rolId == 1);
+        $esAdmin = ($rolId == 1 || $rolId == 5); // Admin o Coordinador
 
         $tipoEntregableModel = $this->model('TipoEntregable');
         $tipos = $tipoEntregableModel->obtenerTodos();
@@ -27,23 +27,20 @@ class EventosController extends Controller
         $registroModel = $this->model('RegistroActividad');
         $tipoSeleccionado = isset($_GET['tipo']) ? (int)$_GET['tipo'] : null;
 
+        // Obtener registros con permisos
         $registros = [];
         if ($tipoSeleccionado) {
-            if ($esAdmin) {
-                $registros = $registroModel->obtenerPorTipoEntregable($tipoSeleccionado);
-            } else {
-                $registros = $registroModel->obtenerPorTipoEntregableYUnidad($tipoSeleccionado, $unidadId);
-            }
+            $registros = $registroModel->obtenerRegistrosConPermisos($tipoSeleccionado, $usuario);
         }
 
+        // Conteos por tipo (también con permisos)
         $conteos = [];
         foreach ($tipos as $tipo) {
-            if ($esAdmin) {
-                $conteos[$tipo['id']] = $registroModel->contarPorTipoEntregable($tipo['id']);
-            } else {
-                $conteos[$tipo['id']] = $registroModel->contarPorTipoEntregableYUnidad($tipo['id'], $unidadId);
-            }
+            $registrosTipo = $registroModel->obtenerRegistrosConPermisos($tipo['id'], $usuario);
+            $conteos[$tipo['id']] = count($registrosTipo);
         }
+
+        $unidadId = $usuario['unidad_administrativa_id'] ?? null;
 
         $this->view('eventos/index', [
             'tipos'            => $tipos,
@@ -67,6 +64,10 @@ class EventosController extends Controller
         }
 
         $registroModel = $this->model('RegistroActividad');
+        if (!$registroModel->verificarAcceso($idRegistro, $_SESSION['usuario_id'])) {
+            die("No tiene permiso para acceder a este registro.");
+        }
+
         $registro = $registroModel->obtenerRegistroCompletoPorId($idRegistro);
         if (!$registro) {
             die("Registro no encontrado.");
@@ -118,7 +119,7 @@ class EventosController extends Controller
                 'modulos_jornada'        => '[]',
                 'requerimientos_internos'=> '[]',
                 'requerimientos_externos'=> '[]',
-                'requerimientos_comunicacion'=> '[]',  // NUEVO
+                'requerimientos_comunicacion'=> '[]',
                 'comunicacion_social'    => '',
                 'delegacion_admin_resumen' => '',
                 'fecha_entrega'          => date('Y-m-d'),
@@ -129,7 +130,7 @@ class EventosController extends Controller
             $evento['modulos_jornada']      = json_decode($evento['modulos_jornada'] ?? '[]', true);
             $evento['requerimientos_internos'] = json_decode($evento['requerimientos_internos'] ?? '[]', true);
             $evento['requerimientos_externos'] = json_decode($evento['requerimientos_externos'] ?? '[]', true);
-            $evento['requerimientos_comunicacion'] = json_decode($evento['requerimientos_comunicacion'] ?? '[]', true); // NUEVO
+            $evento['requerimientos_comunicacion'] = json_decode($evento['requerimientos_comunicacion'] ?? '[]', true);
             $evento['coordinacion_evento']  = $evento['coordinacion_evento'] ?? '';
             $evento['objetivo_evento']      = $evento['objetivo'] ?? '';
             $evento['maestra_ceremonias']   = $evento['maestra_ceremonias'] ?? '';
@@ -140,12 +141,11 @@ class EventosController extends Controller
         $modulosList   = $evento['modulos_jornada'] ?? [];
         $internos      = $evento['requerimientos_internos'] ?? [];
         $externos      = $evento['requerimientos_externos'] ?? [];
-        $comunicacion  = $evento['requerimientos_comunicacion'] ?? []; // NUEVO
+        $comunicacion  = $evento['requerimientos_comunicacion'] ?? [];
 
         $ordenModel = $this->model('OrdenDelDia');
         $ordenes = $ordenModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
 
-        // Calcular duración para cada orden (hora_fin - hora_inicio)
         foreach ($ordenes as &$o) {
             if (!empty($o['hora_inicio']) && !empty($o['hora_fin'])) {
                 $horaInicio = strtotime($o['hora_inicio']);
@@ -182,7 +182,7 @@ class EventosController extends Controller
         $insumos = $inventarioModel->obtenerActivos();
         $insumosInternos = array_filter($insumos, function($i) { return $i['tipo'] == 'Interno'; });
         $insumosExternos = array_filter($insumos, function($i) { return $i['tipo'] == 'Externo'; });
-        $insumosComunicacion = array_filter($insumos, function($i) { return $i['tipo'] == 'Comunicacion'; }); // NUEVO
+        $insumosComunicacion = array_filter($insumos, function($i) { return $i['tipo'] == 'Comunicacion'; });
 
         $unidadJefeModel = $this->model('UnidadJefe');
         $jefe = $unidadJefeModel->obtenerJefeActual($registro['unidad_administrativa_id']);
@@ -224,12 +224,12 @@ class EventosController extends Controller
             'modulosList'             => $modulosList,
             'internos'                => $internos,
             'externos'                => $externos,
-            'comunicacion'            => $comunicacion, // NUEVO
+            'comunicacion'            => $comunicacion,
             'tiposPresidium'          => $tiposPresidium,
             'tipoPresidiumSeleccionado' => $tipoPresidiumSeleccionado,
             'insumosInternos'         => $insumosInternos,
             'insumosExternos'         => $insumosExternos,
-            'insumosComunicacion'     => $insumosComunicacion, // NUEVO
+            'insumosComunicacion'     => $insumosComunicacion,
             'responsableEvento'       => $responsableEvento,
             'usuario'                 => $usuarioModel->obtenerPorId($_SESSION['usuario_id']),
             'usuarios'                => $usuarios,
@@ -239,7 +239,7 @@ class EventosController extends Controller
     }
 
     // ============================================================
-    // 3. GUARDAR CARPETA (CON COMUNICACIÓN SOCIAL)
+    // 3. GUARDAR CARPETA
     // ============================================================
     public function guardar_carpeta()
     {
@@ -255,7 +255,6 @@ class EventosController extends Controller
         $data['invitados_especiales'] = $data['invitados'] ?? [];
         $data['modulos_jornada'] = $data['modulos'] ?? [];
 
-        // Tipo de presídium
         $tipoPresidiumNombre = $data['tipo_presidium_seleccionado'] ?? 'lineal';
         $tipoPresidiumModel = $this->model('TipoPresidium');
         $tipoPresidiumId = 1;
@@ -268,7 +267,6 @@ class EventosController extends Controller
         }
         $data['tipo_presidium'] = $tipoPresidiumId;
 
-        // Decodificar presidium_data
         $data['presidium'] = isset($data['presidium_data'])
             ? (json_decode($data['presidium_data'], true) ?: [])
             : [];
@@ -286,6 +284,15 @@ class EventosController extends Controller
         $carpetaId = $data['carpeta_id'] ?? null;
         $registroId = $data['registro_actividad_id'] ?? 0;
         $eventoId = $data['evento_id'] ?? null;
+        // Si no se recibió carpeta_id, buscar si ya existe una carpeta para este registro
+if (!$carpetaId && $registroId) {
+    $carpetaExistente = $carpetaModel->obtenerPorRegistroActividadId($registroId);
+    if ($carpetaExistente) {
+        $carpetaId = $carpetaExistente['id'];
+        // También actualizar el dato para que el resto del código use el ID correcto
+        $data['carpeta_id'] = $carpetaId;
+    }
+}
 
         $estado = $data['estado'] ?? 'pendiente';
         $usuario = $this->model('Usuario')->obtenerPorId($_SESSION['usuario_id']);
@@ -340,7 +347,6 @@ class EventosController extends Controller
         $imagenCroquis = subirArchivo('imagen_croquis', $uploadDir, 'croquis');
         $logo = subirArchivo('logo_toluca', $uploadDir, 'logo');
 
-        // Guardar carpeta
         $carpetaDatos = [
             'id'                         => $carpetaId,
             'registro_actividad_id'      => $registroId,
@@ -363,7 +369,6 @@ class EventosController extends Controller
             $carpetaId = $nuevoId;
         }
 
-        // Guardar/actualizar evento_detalle
         if (!$eventoId && $carpetaId) {
             $existente = $eventoModel->obtenerPorCarpetaIdCompleto($carpetaId);
             if ($existente) {
@@ -395,7 +400,7 @@ class EventosController extends Controller
             'modulos_jornada'        => json_encode($data['modulos_jornada'] ?? []),
             'requerimientos_internos'=> json_encode($data['req_internos'] ?? []),
             'requerimientos_externos'=> json_encode($data['req_externos'] ?? []),
-            'requerimientos_comunicacion' => json_encode($data['req_comunicacion'] ?? []), // NUEVO
+            'requerimientos_comunicacion' => json_encode($data['req_comunicacion'] ?? []),
             'comunicacion_social'    => $data['comunicacion_social'] ?? '',
             'delegacion_admin_resumen' => $data['delegacion_admin_resumen'] ?? '',
             'fecha_entrega'          => $data['fecha_entrega'] ?? date('Y-m-d'),
@@ -411,7 +416,14 @@ class EventosController extends Controller
             $eventoId = $eventoGuardado;
         }
 
-        // Guardar orden del día
+        $eventoFotosModel = $this->model('EventoFotos');
+        if ($imagenLugar) {
+            $eventoFotosModel->guardarPorEventoDetalleYTipo($eventoId, 'lugar', $imagenLugar);
+        }
+        if ($imagenMaps) {
+            $eventoFotosModel->guardarPorEventoDetalleYTipo($eventoId, 'google_maps', $imagenMaps);
+        }
+
         $ordenes = [];
         if (isset($data['orden']) && is_array($data['orden'])) {
             foreach ($data['orden'] as $o) {
@@ -442,9 +454,6 @@ class EventosController extends Controller
         }
         $ordenModel->guardarMultiple($eventoId, $ordenes);
 
-        // ============================================================
-        // GUARDAR PRESÍDIUM (VERSIÓN ROBUSTA)
-        // ============================================================
         $numSpots = (int)($data['num_spots'] ?? 5);
         $receivedSpots = [];
         if (isset($data['presidium']) && is_array($data['presidium'])) {
@@ -469,7 +478,6 @@ class EventosController extends Controller
         }
         $presidiumModel->guardarMultiple($eventoId, $presidiumList);
 
-        // Historial
         $historialModel = $this->model('HistorialCarpeta');
         $historialModel->guardar([
             'carpeta_id'     => $carpetaId,
@@ -487,83 +495,90 @@ class EventosController extends Controller
         ]);
     }
 
- public function revision()
-{
-    $usuarioModel = $this->model('Usuario');
-    $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
-    $unidadId = $usuario['unidad_administrativa_id'] ?? null;
-    
-    $carpetaModel = $this->model('Carpeta');
-    // Obtener carpetas con estado 'entregado' o 'revisado' (pendientes de revisión)
-    $carpetas = $carpetaModel->obtenerPendientesRevision($unidadId);
-    
-    $this->view('eventos/revision', [
-        'carpetas' => $carpetas,
-        'usuario'  => $usuario
-    ]);
-}
+    // ============================================================
+    // 4. REVISIÓN DE CARPETAS (CON PERMISOS)
+    // ============================================================
+    public function revision()
+    {
+        $usuarioModel = $this->model('Usuario');
+        $usuario = $usuarioModel->obtenerPorId($_SESSION['usuario_id']);
+        // Obtener conexión a la base de datos desde el modelo Usuario
+        $db = $usuarioModel->getDb();
 
-   // ============================================================
-// 5. VER DETALLE DE CARPETA (RECIBE id_registro)
-// ============================================================
-public function ver_carpeta($id = null)
-{
-    if ($id === null) {
-        $id = $_GET['id_registro'] ?? null;
-    }
-    if (!$id) {
-        die('ID de registro no especificado');
-    }
+        // Obtener unidades accesibles pasando la conexión
+        $unidadesAccesibles = PermissionHelper::getUnidadesAccesibles($db, $usuario);
 
-    // Obtener el registro de actividad
-    $registroModel = $this->model('RegistroActividad');
-    $registro = $registroModel->obtenerRegistroCompletoPorId($id);
-    if (!$registro) {
-        die('Registro no encontrado');
+        $carpetaModel = $this->model('Carpeta');
+        if ($unidadesAccesibles === null) {
+            // Admin/Coordinador: todas
+            $carpetas = $carpetaModel->obtenerPendientesRevision();
+        } else {
+            // Obtener carpetas de registros cuyas unidades estén en $unidadesAccesibles
+            $carpetas = $carpetaModel->obtenerPendientesRevisionPorUnidades($unidadesAccesibles);
+        }
+
+        $this->view('eventos/revision', [
+            'carpetas' => $carpetas,
+            'usuario'  => $usuario
+        ]);
     }
 
-    // Obtener la carpeta asociada a ese registro
-    $carpetaModel = $this->model('Carpeta');
-    $carpeta = $carpetaModel->obtenerPorRegistroActividadId($id);
-    if (!$carpeta) {
-        die('Carpeta no encontrada para este registro');
+    // ============================================================
+    // 5. VER DETALLE DE CARPETA
+    // ============================================================
+    public function ver_carpeta($id = null)
+    {
+        if ($id === null) {
+            $id = $_GET['id_registro'] ?? null;
+        }
+        if (!$id) {
+            die('ID de registro no especificado');
+        }
+
+        $registroModel = $this->model('RegistroActividad');
+        $registro = $registroModel->obtenerRegistroCompletoPorId($id);
+        if (!$registro) {
+            die('Registro no encontrado');
+        }
+
+        $carpetaModel = $this->model('Carpeta');
+        $carpeta = $carpetaModel->obtenerPorRegistroActividadId($id);
+        if (!$carpeta) {
+            die('Carpeta no encontrada para este registro');
+        }
+
+        $eventoModel = $this->model('EventoDetalle');
+        $evento = $eventoModel->obtenerPorCarpetaIdCompleto($carpeta['id'] ?? null);
+
+        $ordenModel = $this->model('OrdenDelDia');
+        $ordenes = $ordenModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
+
+        $presidiumModel = $this->model('PresidiumAsistente');
+        $presidium = $presidiumModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
+
+        $invitados = [];
+        $modulos = [];
+        $internos = [];
+        $externos = [];
+        if ($evento) {
+            $invitados = json_decode($evento['invitados_especiales'] ?? '[]', true);
+            $modulos = json_decode($evento['modulos_jornada'] ?? '[]', true);
+            $internos = json_decode($evento['requerimientos_internos'] ?? '[]', true);
+            $externos = json_decode($evento['requerimientos_externos'] ?? '[]', true);
+        }
+
+        $this->view('eventos/ver_carpeta', [
+            'registro'  => $registro,
+            'carpeta'   => $carpeta,
+            'evento'    => $evento,
+            'ordenes'   => $ordenes,
+            'presidium' => $presidium,
+            'invitados' => $invitados,
+            'modulos'   => $modulos,
+            'internos'  => $internos,
+            'externos'  => $externos
+        ]);
     }
-
-    // Obtener evento_detalle
-    $eventoModel = $this->model('EventoDetalle');
-    $evento = $eventoModel->obtenerPorCarpetaIdCompleto($carpeta['id'] ?? null);
-
-    // Obtener orden del día y presídium
-    $ordenModel = $this->model('OrdenDelDia');
-    $ordenes = $ordenModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
-
-    $presidiumModel = $this->model('PresidiumAsistente');
-    $presidium = $presidiumModel->obtenerPorEventoDetalleId($evento['id'] ?? 0);
-
-    // Invitados, módulos, requerimientos (desde JSON)
-    $invitados = [];
-    $modulos = [];
-    $internos = [];
-    $externos = [];
-    if ($evento) {
-        $invitados = json_decode($evento['invitados_especiales'] ?? '[]', true);
-        $modulos = json_decode($evento['modulos_jornada'] ?? '[]', true);
-        $internos = json_decode($evento['requerimientos_internos'] ?? '[]', true);
-        $externos = json_decode($evento['requerimientos_externos'] ?? '[]', true);
-    }
-
-    $this->view('eventos/ver_carpeta', [
-        'registro'  => $registro,
-        'carpeta'   => $carpeta,
-        'evento'    => $evento,
-        'ordenes'   => $ordenes,
-        'presidium' => $presidium,
-        'invitados' => $invitados,
-        'modulos'   => $modulos,
-        'internos'  => $internos,
-        'externos'  => $externos
-    ]);
-}
 
     // ============================================================
     // 6. SUBIR EVIDENCIA
@@ -909,21 +924,19 @@ public function ver_carpeta($id = null)
     // 12. OBTENER HISTORIAL (JSON)
     // ============================================================
     public function historial($carpetaId)
-{
-    $historialModel = $this->model('HistorialCarpeta');
-    $registros = $historialModel->obtenerPorCarpeta($carpetaId);
-    
-    // Si es una petición AJAX, devolver JSON
-    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-        header('Content-Type: application/json');
-        echo json_encode($registros);
-        exit;
+    {
+        $historialModel = $this->model('HistorialCarpeta');
+        $registros = $historialModel->obtenerPorCarpeta($carpetaId);
+        
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode($registros);
+            exit;
+        }
+        
+        $this->view('eventos/historial', [
+            'historial' => $registros
+        ]);
     }
-    
-    // Si es una petición normal, mostrar la vista
-    $this->view('eventos/historial', [
-        'historial' => $registros
-    ]);
-}
 }

@@ -11,10 +11,11 @@ class OrdenDelDia extends Model
      */
     public function obtenerPorEventoDetalleId($eventoDetalleId)
     {
-        $sql = "SELECT *, 
-                       TIMESTAMPDIFF(MINUTE, hora_inicio, hora_fin) AS duracion_calculada
-                FROM orden_del_dia 
-                WHERE evento_detalle_id = ? 
+        $sql = "SELECT odd.*, u.nombre AS responsable_nombre,
+                       TIMESTAMPDIFF(MINUTE, odd.hora_inicio, odd.hora_fin) AS duracion_calculada
+                FROM orden_del_dia odd
+                LEFT JOIN usuario u ON u.id = odd.responsable_id
+                WHERE odd.evento_detalle_id = ? 
                 ORDER BY hora_inicio";
         $stmt = $this->db->query($sql);
         $stmt->execute([$eventoDetalleId]);
