@@ -1,6 +1,8 @@
 <?php
 
+
 require_once dirname(__DIR__, 2) . '/helpers/PptCoordinateConverter.php';
+
 
 /** Todas las coordenadas públicas de esta clase están expresadas en centímetros. */
 class EventoPptTemplate
@@ -20,7 +22,9 @@ class EventoPptTemplate
     const COLOR = 'FF3E3E3E';
     const INSTITUTIONAL = 'FF800000';
 
+
     private $slide, $slideNumber;
+
 
     public function __construct($slide, $background, $direccion = '', $slideNumber = 1)
     {
@@ -28,16 +32,17 @@ class EventoPptTemplate
         $this->setBackground($background);
     }
 
+
     public function getContentArea() { return ['x'=>self::CONTENT_X,'y'=>self::CONTENT_Y,'width'=>self::CONTENT_W,'height'=>self::CONTENT_BOTTOM-self::CONTENT_Y,'bottom'=>self::CONTENT_BOTTOM]; }
     public function cmToPx($cm) { return PptCoordinateConverter::phpPixels($cm); }
+
 
     public function setBackground($path)
     {
         if (!$this->isImage($path)) return false;
         $background = new \PhpOffice\PhpPresentation\Slide\Background\Image(); $background->setPath($path); $this->slide->setBackground($background); return true;
     }
-
-    /** Capa a pantalla completa para portada: se usa antes de cualquier texto. */
+     /** Capa a pantalla completa para portada: se usa antes de cualquier texto. */
     public function addFullSlideLayer($path, $keepProportion = true)
     {
         if (!$this->isImage($path)) return false;
@@ -47,12 +52,12 @@ class EventoPptTemplate
         return $this->slide->createDrawingShape()->setPath($path)->setOffsetX($this->cmToPx($x))->setOffsetY($this->cmToPx($y))->setWidth($this->cmToPx($drawW))->setHeight($this->cmToPx($drawH));
     }
 
+
     public function addSlideTitle($title)
     {
         return $this->addTextBox($title, 1.50, 2.12, 22.40, .55, 23, 'left', ['name'=>'Título','bold'=>true,'color'=>self::INSTITUTIONAL,'max'=>23,'min'=>16,'zone'=>'title','singleLine'=>true]);
     }
-
-    public function addTextBox($text, $x, $y, $width, $height, $fontSize, $alignment = 'left', array $style = [])
+     public function addTextBox($text, $x, $y, $width, $height, $fontSize, $alignment = 'left', array $style = [])
     {
         $this->validate($style['name'] ?? 'Cuadro de texto', $x, $y, $width, $height, $style['zone'] ?? 'content');
         $size=$this->fitFont((string)$text,$width,$height,$style['max']??$fontSize,$style['min']??10);
@@ -66,24 +71,26 @@ class EventoPptTemplate
         return $shape;
     }
 
+
     public function addImage($path, $x, $y, $width, $height, $keepProportion = true)
     {
         if (!$this->isImage($path)) return false; $this->validate('Imagen', $x, $y, $width, $height, 'content'); $info=getimagesize($path); if(!$info)return false;
         if($keepProportion){$ratio=min($width/$info[0],$height/$info[1]);$drawW=$info[0]*$ratio;$drawH=$info[1]*$ratio;$x+=($width-$drawW)/2;$y+=($height-$drawH)/2;}else{$drawW=$width;$drawH=$height;}
         return $this->slide->createDrawingShape()->setPath($path)->setOffsetX($this->cmToPx($x))->setOffsetY($this->cmToPx($y))->setWidth($this->cmToPx($drawW))->setHeight($this->cmToPx($drawH));
     }
-
-    public function addTable(array $headers,array $rows,array $widths,$x,$y,$maxHeight)
+     public function addTable(array $headers,array $rows,array $widths,$x,$y,$maxHeight)
     {
         $headerH=.62;$used=$headerH;$cursor=$x;
         foreach($headers as $i=>$header){$this->cell($header,$cursor,$y,$widths[$i],$headerH,true);$cursor+=$widths[$i];}$y+=$headerH;
         foreach($rows as $row){$rowH=$this->tableRowHeight($row,$widths);if($used+$rowH>$maxHeight)break;$cursor=$x;foreach($headers as $i=>$header){$this->cell($row[$i]??'',$cursor,$y,$widths[$i],$rowH);$cursor+=$widths[$i];}$y+=$rowH;$used+=$rowH;}
     }
 
+
     public function tableRowHeight(array $row,array $widths)
     {
         $lines=1;foreach($row as $i=>$value)$lines=max($lines,(int)ceil(mb_strlen((string)$value,'UTF-8')/max(12,(($widths[$i]??3)*PptCoordinateConverter::PHP_PIXELS_PER_CM)/8.5)));return max(.58,.18+$lines*.34);
     }
+
 
     private function cell($text,$x,$y,$w,$h,$header=false)
     {

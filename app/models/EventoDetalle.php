@@ -96,7 +96,7 @@ class EventoDetalle extends Model
                 $datos['modulos_jornada'] ?? '[]',
                 $datos['requerimientos_internos'] ?? '[]',
                 $datos['requerimientos_externos'] ?? '[]',
-                $datos['requerimientos_comunicacion'] ?? '[]', // NUEVO
+                $datos['requerimientos_comunicacion'] ?? '[]',
                 $datos['comunicacion_social'] ?? '',
                 $datos['delegacion_admin_resumen'] ?? '',
                 $datos['fecha_entrega'] ?? null,
@@ -138,7 +138,7 @@ class EventoDetalle extends Model
                 $datos['modulos_jornada'] ?? '[]',
                 $datos['requerimientos_internos'] ?? '[]',
                 $datos['requerimientos_externos'] ?? '[]',
-                $datos['requerimientos_comunicacion'] ?? '[]', // NUEVO
+                $datos['requerimientos_comunicacion'] ?? '[]',
                 $datos['comunicacion_social'] ?? '',
                 $datos['delegacion_admin_resumen'] ?? '',
                 $datos['fecha_entrega'] ?? null,

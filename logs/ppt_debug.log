@@ -1,0 +1,53 @@
+[2026-08-11 10:15:31]
+=== INICIO DEPURACIÓN IMÁGENES ===
+Root: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source
+ID Registro: 19
+ID Carpeta: 12
+ID Evento: 5
+imagen_diseno en BD: NULL
+fondoEvento (ruta encontrada): NO ENCONTRADA
+logo_toluca en BD: NULL
+logo (ruta encontrada): NO ENCONTRADO
+imagen_editable en BD: lineal.png
+Buscando: lineal.png
+Candidatos: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/img/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/img/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/img/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/uploads/lineal.png ...
+NO ENCONTRADO para: lineal.png
+presidiumBackground (ruta encontrada): NO ENCONTRADO
+imagen_lugar en BD: uploads/eventos/lugar_1786435856.png
+Buscando: uploads/eventos/lugar_1786435856.png
+Candidatos: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/img/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/img/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/uploads/eventos/lugar_1786435856.png ...
+NO ENCONTRADO para: uploads/eventos/lugar_1786435856.png
+imagenLugar (ruta encontrada): NO ENCONTRADO
+imagen_maps en BD: uploads/eventos/maps_1786435856.jpg
+Buscando: uploads/eventos/maps_1786435856.jpg
+Candidatos: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/img/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/img/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/uploads/eventos/maps_1786435856.jpg ...
+ENCONTRADO: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source\uploads\eventos\maps_1786435856.jpg
+imagenMaps (ruta encontrada): C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source\uploads\eventos\maps_1786435856.jpg
+
+[2026-08-11 10:16:09]
+=== INICIO DEPURACIÓN IMÁGENES ===
+Root: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source
+ID Registro: 19
+ID Carpeta: 12
+ID Evento: 5
+imagen_diseno en BD: NULL
+fondoEvento (ruta encontrada): NO ENCONTRADA
+logo_toluca en BD: NULL
+logo (ruta encontrada): NO ENCONTRADO
+imagen_editable en BD: lineal.png
+Buscando: lineal.png
+Candidatos: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/img/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/img/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/img/lineal.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/uploads/lineal.png ...
+NO ENCONTRADO para: lineal.png
+presidiumBackground (ruta encontrada): NO ENCONTRADO
+imagen_lugar en BD: uploads/eventos/lugar_1786435856.png
+Buscando: uploads/eventos/lugar_1786435856.png
+Candidatos: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/img/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/img/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/eventos/lugar_1786435856.png; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/uploads/eventos/lugar_1786435856.png ...
+NO ENCONTRADO para: uploads/eventos/lugar_1786435856.png
+imagenLugar (ruta encontrada): NO ENCONTRADO
+imagen_maps en BD: uploads/eventos/maps_1786435856.jpg
+Buscando: uploads/eventos/maps_1786435856.jpg
+Candidatos: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/uploads/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/uploads/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/img/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/img/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/eventos/maps_1786435856.jpg; C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source/public/public/uploads/uploads/eventos/maps_1786435856.jpg ...
+ENCONTRADO: C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source\uploads\eventos\maps_1786435856.jpg
+imagenMaps (ruta encontrada): C:\Users\carmo\Documents\Codex\2026-08-05\repositorio-https-github-com-anakarenca-dir\source\uploads\eventos\maps_1786435856.jpg
+
+[2026-08-11 11:11:10] {"evento_id":5,"imagen_lugar_bd":"uploads/eventos/lugar_1786439006.png","resultado_rutaFoto":"uploads/eventos/lugar_1786439006.png","ruta_final_enviada_a_loadEventImage":"uploads/eventos/lugar_1786439006.png","resultado_imagenLugar":null}
